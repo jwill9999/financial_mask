@@ -75,6 +75,31 @@ jobs:
           fi
         fi
     
+    # Create or update Cypress config to ensure baseUrl matches the server
+    - name: Configure Cypress
+      run: |
+        cd ${{ env.WORK_DIR }}
+        # Create or update cypress.config.js to ensure baseUrl is set to localhost:4200
+        if [ -f "cypress.config.js" ]; then
+          # Update existing file
+          sed -i 's|baseUrl:.*|baseUrl: "http://localhost:4200",|g' cypress.config.js
+          echo "Updated Cypress config with baseUrl: http://localhost:4200"
+        else
+          # Create basic config file
+          echo 'const { defineConfig } = require("cypress");
+            
+            module.exports = defineConfig({
+              e2e: {
+                baseUrl: "http://localhost:4200",
+                setupNodeEvents(on, config) {
+                  // implement node event listeners here
+                },
+              },
+            });' > cypress.config.js
+          echo "Created Cypress config with baseUrl: http://localhost:4200"
+        fi
+        cat cypress.config.js
+    
     # Install dependencies for real
     - name: Install dependencies
       run: |
