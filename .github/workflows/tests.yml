@@ -1,0 +1,72 @@
+name: Angular Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        directory: ./coverage/angular-app/
+        fail_ci_if_error: false
+    
+    - name: Generate README badges
+      run: |
+        npm install --no-save badge-maker
+        echo "Generating badges..."
+        
+        # Extract coverage from report
+        STATEMENTS=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.statements.pct')
+        BRANCHES=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.branches.pct')
+        FUNCTIONS=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.functions.pct')
+        LINES=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.lines.pct')
+        
+        # Determine badge color based on coverage
+        if (( $(echo "$STATEMENTS >= 90" | bc -l) )); then COLOR="brightgreen"; 
+        elif (( $(echo "$STATEMENTS >= 80" | bc -l) )); then COLOR="green"; 
+        elif (( $(echo "$STATEMENTS >= 70" | bc -l) )); then COLOR="yellowgreen"; 
+        elif (( $(echo "$STATEMENTS >= 60" | bc -l) )); then COLOR="yellow"; 
+        else COLOR="red"; fi
+        
+        echo "::set-output name=statements::$STATEMENTS"
+        echo "::set-output name=color::$COLOR"
+      id: coverage
+    
+    - name: Comment on PR with badges
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const statements = steps.coverage.outputs.statements;
+          const color = steps.coverage.outputs.color;
+          
+          const testBadge = `[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/${context.repo.owner}/${context.repo.repo}/actions)`;
+          const coverageBadge = `[![Coverage](https://img.shields.io/badge/coverage-${statements}%25-${color})](https://codecov.io/gh/${context.repo.owner}/${context.repo.repo})`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Test Results\n\n${testBadge} ${coverageBadge}\n\nTests passed with ${statements}% code coverage!`
+          }) 
