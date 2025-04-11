@@ -2,7 +2,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
 [![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
-[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
+[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/e2e-tests.yml)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
 [![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
 [![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/e2e-tests.yml)
