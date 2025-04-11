@@ -1,8 +1,8 @@
 # Angular Secure Credit Card Input
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/your-username/your-repo)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/your-username/your-repo)
-[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/your-username/your-repo)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jwill9999/financial_mask)
+[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
 [![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ed)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
@@ -31,7 +31,7 @@ OR
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/jwill9999/financial_mask.git
    cd angular-app
    ```
 
@@ -55,7 +55,7 @@ OR
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/jwill9999/financial_mask.git
    cd angular-app
    ```
 
