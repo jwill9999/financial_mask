@@ -171,6 +171,21 @@ jobs:
         cd ${{ env.WORK_DIR }}
         npx ng lint || true
     
+    # Accessibility checks - only run if not in Act
+    - name: Run accessibility checks
+      id: a11y_check
+      if: env.RUNNING_IN_ACT != 'true'
+      continue-on-error: true
+      run: |
+        cd ${{ env.WORK_DIR }}
+        if npm run lint:a11y; then
+          echo "A11Y_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "A11Y_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "A11Y_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "A11Y_COLOR=red" >> $GITHUB_OUTPUT
+        fi
+    
     # Build - run in all environments
     - name: Build
       run: |
@@ -284,11 +299,66 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const badge = '[![All Checks](https://img.shields.io/badge/all%20checks-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)';
+          const a11yStatus = '${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}';
+          const a11yColor = '${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}';
+          
+          const allChecksBadge = '[![All Checks](https://img.shields.io/badge/all%20checks-completed-blue)](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)';
+          const a11yBadge = `[![Accessibility](https://img.shields.io/badge/accessibility-${a11yStatus}-${a11yColor})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `## All Checks Ran\n\n${badge}\n\nThe workflow has completed with all necessary checks.`
-          }) 
+            body: `## All Checks Ran\n\n${allChecksBadge} ${a11yBadge}\n\nThe workflow has completed with all necessary checks.`
+          })
+    
+    # Update README badges (run only on main/master branch pushes)
+    - name: Update README badges for accessibility
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
+        # Set git identity for the commit
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Change directory if needed
+        cd ${{ env.WORK_DIR }}
+        
+        # Get the accessibility status
+        A11Y_STATUS="${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}"
+        A11Y_COLOR="${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}"
+        
+        # Create the badge URL
+        A11Y_BADGE="[![Accessibility](https://img.shields.io/badge/accessibility-${A11Y_STATUS}-${A11Y_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
+        
+        # Update the README badge
+        if [ -f "README.md" ]; then
+          # Update Accessibility badge
+          sed -i -E "s|\\[\\!\\[Accessibility\\]\\([^)]+\\)\\]\\([^)]+\\)|${A11Y_BADGE}|g" README.md
+          
+          # If badge doesn't exist yet, add it to the top of the file
+          if ! grep -q "\\[\\!\\[Accessibility\\]" README.md; then
+            # Add after any existing badges or at top
+            if grep -q "\\[\\!\\[" README.md; then
+              # Insert after last badge
+              sed -i -e "/\\[\\!\\[.*\\].*\\].*)/a\\${A11Y_BADGE}" README.md
+            else
+              # Insert at the top
+              sed -i -e "1i\\${A11Y_BADGE}\\n" README.md
+            fi
+          fi
+          
+          echo "README.md accessibility badge updated"
+          
+          # Check if there are changes to commit
+          if [[ -n $(git status -s README.md) ]]; then
+            echo "Changes detected, committing README.md updates"
+            git add README.md
+            git commit -m "docs: update accessibility badge [skip ci]"
+            git push
+          else
+            echo "No changes to README.md detected"
+          fi
+        else
+          echo "README.md not found in ${{ env.WORK_DIR }}"
+        fi
+      continue-on-error: true 
