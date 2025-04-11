@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Required permissions for updating the README
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -141,10 +146,12 @@ jobs:
         echo "STATEMENTS=$STATEMENTS" >> $GITHUB_OUTPUT
         echo "COLOR=$COLOR" >> $GITHUB_OUTPUT
       id: coverage
+      continue-on-error: true
     
     - name: Comment on PR with badges
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
+      continue-on-error: true
       with:
         script: |
           const statements = '${{ steps.coverage.outputs.STATEMENTS }}';
@@ -159,3 +166,64 @@ jobs:
             repo: context.repo.repo,
             body: `## Test Results\n\n${testBadge} ${coverageBadge}\n\nTests passed with ${statements}% code coverage!`
           }) 
+    
+    # Update README badges (run only on main/master branch pushes)
+    - name: Update README badges
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
+        # Set git identity for the commit
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Change directory if needed
+        cd ${{ env.WORK_DIR }}
+        
+        # Get the coverage data
+        STATEMENTS=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.statements.pct')
+        # Determine badge color based on coverage
+        if (( $(echo "$STATEMENTS >= 90" | bc -l) )); then COLOR="brightgreen"; 
+        elif (( $(echo "$STATEMENTS >= 80" | bc -l) )); then COLOR="green"; 
+        elif (( $(echo "$STATEMENTS >= 70" | bc -l) )); then COLOR="yellowgreen"; 
+        elif (( $(echo "$STATEMENTS >= 60" | bc -l) )); then COLOR="yellow"; 
+        else COLOR="red"; fi
+        
+        # Create the badge URLs
+        TEST_BADGE="[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/tests.yml)"
+        COVERAGE_BADGE="[![Coverage](https://img.shields.io/badge/coverage-${STATEMENTS}%25-${COLOR})](https://codecov.io/gh/${{ github.repository }})"
+        
+        # Update the README badges
+        # First, check if README exists and has badge placeholders
+        if [ -f "README.md" ]; then
+          # Update Tests badge
+          sed -i -E "s|\\[\\!\\[Tests\\]\\([^)]+\\)\\]\\([^)]+\\)|${TEST_BADGE}|g" README.md
+          # Update Coverage badge
+          sed -i -E "s|\\[\\!\\[Coverage\\]\\([^)]+\\)\\]\\([^)]+\\)|${COVERAGE_BADGE}|g" README.md
+          
+          echo "README.md badges updated"
+          
+          # Check if there are changes to commit
+          if [[ -n $(git status -s README.md) ]]; then
+            echo "Changes detected, committing README.md updates"
+            git add README.md
+            git commit -m "docs: update README badges [skip ci]"
+            git push
+          else
+            echo "No changes to README.md detected"
+          fi
+        else
+          echo "README.md not found in ${{ env.WORK_DIR }}"
+        fi
+      continue-on-error: true 
+
+    - name: Run ESLint
+      id: eslint
+      continue-on-error: true
+      run: |
+        cd ${{ env.WORK_DIR }}
+        if npx ng lint; then
+          echo "ESLINT_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "ESLINT_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "ESLINT_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "ESLINT_COLOR=red" >> $GITHUB_OUTPUT
+        fi 
