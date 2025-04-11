@@ -301,15 +301,18 @@ jobs:
         script: |
           const a11yStatus = '${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}';
           const a11yColor = '${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}';
+          const coverage = '${{ steps.coverage.outputs.STATEMENTS || '0' }}';
+          const covColor = '${{ steps.coverage.outputs.COLOR || 'red' }}';
           
           const allChecksBadge = '[![All Checks](https://img.shields.io/badge/all%20checks-completed-blue)](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)';
           const a11yBadge = `[![Accessibility](https://img.shields.io/badge/accessibility-${a11yStatus}-${a11yColor})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)`;
+          const coverageBadge = `[![Coverage](https://img.shields.io/badge/coverage-${coverage}%25-${covColor})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `## All Checks Ran\n\n${allChecksBadge} ${a11yBadge}\n\nThe workflow has completed with all necessary checks.`
+            body: `## All Checks Ran\n\n${allChecksBadge} ${a11yBadge} ${coverageBadge}\n\nThe workflow has completed with all necessary checks.`
           })
     
     # Update README badges (run only on main/master branch pushes)
@@ -327,15 +330,24 @@ jobs:
         A11Y_STATUS="${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}"
         A11Y_COLOR="${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}"
         
-        # Create the badge URL
-        A11Y_BADGE="[![Accessibility](https://img.shields.io/badge/accessibility-${A11Y_STATUS}-${A11Y_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
+        # Get the coverage data
+        STATEMENTS="${{ steps.coverage.outputs.STATEMENTS || '0' }}"
+        COV_COLOR="${{ steps.coverage.outputs.COLOR || 'red' }}"
         
-        # Update the README badge
+        # Create the badge URLs
+        A11Y_BADGE="[![Accessibility](https://img.shields.io/badge/accessibility-${A11Y_STATUS}-${A11Y_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
+        COVERAGE_BADGE="[![Coverage](https://img.shields.io/badge/coverage-${STATEMENTS}%25-${COV_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
+        
+        # Update the README badges
         if [ -f "README.md" ]; then
           # Update Accessibility badge
           sed -i -E "s|\\[\\!\\[Accessibility\\]\\([^)]+\\)\\]\\([^)]+\\)|${A11Y_BADGE}|g" README.md
           
-          # If badge doesn't exist yet, add it to the top of the file
+          # Update Coverage badge
+          sed -i -E "s|\\[\\!\\[Coverage\\]\\([^)]+\\)\\]\\([^)]+\\)|${COVERAGE_BADGE}|g" README.md
+          
+          # If badges don't exist yet, add them
+          # First check for accessibility badge
           if ! grep -q "\\[\\!\\[Accessibility\\]" README.md; then
             # Add after any existing badges or at top
             if grep -q "\\[\\!\\[" README.md; then
@@ -347,13 +359,28 @@ jobs:
             fi
           fi
           
-          echo "README.md accessibility badge updated"
+          # Then check for coverage badge
+          if ! grep -q "\\[\\!\\[Coverage\\]" README.md; then
+            # Add after any existing badges
+            if grep -q "\\[\\!\\[Accessibility\\]" README.md; then
+              # Insert after accessibility badge
+              sed -i -e "/\\[\\!\\[Accessibility\\].*\\].*\\].*)/a\\${COVERAGE_BADGE}" README.md
+            elif grep -q "\\[\\!\\[" README.md; then
+              # Insert after last badge
+              sed -i -e "/\\[\\!\\[.*\\].*\\].*)/a\\${COVERAGE_BADGE}" README.md
+            else
+              # Insert at the top
+              sed -i -e "1i\\${COVERAGE_BADGE}\\n" README.md
+            fi
+          fi
+          
+          echo "README.md badges updated"
           
           # Check if there are changes to commit
           if [[ -n $(git status -s README.md) ]]; then
             echo "Changes detected, committing README.md updates"
             git add README.md
-            git commit -m "docs: update accessibility badge [skip ci]"
+            git commit -m "docs: update README badges [skip ci]"
             git push
           else
             echo "No changes to README.md detected"
