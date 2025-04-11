@@ -79,11 +79,15 @@ jobs:
       run: |
         if [ -f /etc/os-release ]; then
           # For Linux environments
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - || true
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
-          apt-get update
-          apt-get install -y google-chrome-stable
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          echo "Chrome installation completed"
           echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
+          echo "Chrome found at: $(which google-chrome)"
         else
           # For macOS (during local Act testing)
           echo "Using local Chrome installation"

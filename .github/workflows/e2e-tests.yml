@@ -52,6 +52,29 @@ jobs:
         # Remove cache config when running in Act to avoid errors
         cache: ${{ env.RUNNING_IN_ACT != 'true' && 'npm' || '' }}
     
+    # Install Chrome for tests but skip in Act
+    - name: Install Chrome
+      if: env.RUNNING_IN_ACT != 'true'
+      run: |
+        if [ -f /etc/os-release ]; then
+          # For Linux environments
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          echo "Chrome installation completed"
+          echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
+          echo "Chrome found at: $(which google-chrome)"
+        else
+          # For macOS
+          echo "Using local Chrome installation"
+          if [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+            echo "CHROME_BIN=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" >> $GITHUB_ENV
+          fi
+        fi
+    
     # Install dependencies for real
     - name: Install dependencies
       run: |
@@ -86,7 +109,8 @@ jobs:
         start: npm start
         wait-on: 'http://localhost:4200'
         browser: chrome
-        headless: true
+        headed: false
+        publish-summary: true
     
     # Use simplified artifact upload for Act
     - name: Upload artifacts in Act
@@ -101,14 +125,14 @@ jobs:
     # Real artifact uploads only run in GitHub Actions
     - name: Upload Cypress screenshots
       if: failure() && env.RUNNING_IN_ACT != 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@a8a3f3ad30e3422c6c61c1b8b8a24df9a3b06f5f # v3.1.3
       with:
         name: cypress-screenshots
         path: ${{ env.WORK_DIR }}/cypress/screenshots
     
     - name: Upload Cypress videos
       if: always() && env.RUNNING_IN_ACT != 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@a8a3f3ad30e3422c6c61c1b8b8a24df9a3b06f5f # v3.1.3
       with:
         name: cypress-videos
         path: ${{ env.WORK_DIR }}/cypress/videos

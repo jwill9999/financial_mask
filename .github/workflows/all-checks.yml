@@ -82,19 +82,15 @@ jobs:
       run: |
         if [ -f /etc/os-release ]; then
           # For Linux environments
-          apt-get update || true
-          apt-get install -y wget gnupg || true
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - || true
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list || true
-          apt-get update || true
-          apt-get install -y google-chrome-stable || true
-          echo "Chrome installation attempted"
-          if [ -f "$(which google-chrome)" ]; then
-            echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
-            echo "Chrome found at: $(which google-chrome)"
-          else
-            echo "Chrome not found after installation attempt"
-          fi
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          echo "Chrome installation completed"
+          echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
+          echo "Chrome found at: $(which google-chrome)"
         else
           # For macOS
           echo "Using local Chrome installation"
@@ -133,6 +129,15 @@ jobs:
         cd ${{ env.WORK_DIR }}
         npm run build || true
     
+    # Build artifact upload for GitHub Actions
+    - name: Upload build artifacts
+      if: env.RUNNING_IN_ACT != 'true'
+      uses: actions/upload-artifact@a8a3f3ad30e3422c6c61c1b8b8a24df9a3b06f5f # v3.1.3
+      with:
+        name: build-artifacts
+        path: ${{ env.WORK_DIR }}/dist/
+        retention-days: 7
+    
     # Unit Tests - only run if not in Act
     - name: Run unit tests
       if: env.RUNNING_IN_ACT != 'true'
@@ -169,8 +174,26 @@ jobs:
         start: npm start
         wait-on: 'http://localhost:4200'
         browser: chrome
-        headless: true
+        headed: false
         install: false
+        publish-summary: true
+    
+    # Cypress artifact uploads
+    - name: Upload Cypress screenshots
+      if: env.RUNNING_IN_ACT != 'true' && failure()
+      continue-on-error: true
+      uses: actions/upload-artifact@a8a3f3ad30e3422c6c61c1b8b8a24df9a3b06f5f # v3.1.3
+      with:
+        name: cypress-screenshots
+        path: ${{ env.WORK_DIR }}/cypress/screenshots
+    
+    - name: Upload Cypress videos
+      if: env.RUNNING_IN_ACT != 'true' && always()
+      continue-on-error: true
+      uses: actions/upload-artifact@a8a3f3ad30e3422c6c61c1b8b8a24df9a3b06f5f # v3.1.3
+      with:
+        name: cypress-videos
+        path: ${{ env.WORK_DIR }}/cypress/videos
     
     # Final report
     - name: Comment on PR
