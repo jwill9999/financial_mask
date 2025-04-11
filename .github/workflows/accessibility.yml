@@ -89,7 +89,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: `## Accessibility Check ${status}\n\n${a11yBadge}\n\n${status === 'Failed ❌' ? 'Please fix the accessibility issues in your code.' : 'Accessibility checks have passed successfully.'}`
-          }) 
+          })
     
     # Update README accessibility badge (run only on main/master branch pushes)
     - name: Update README accessibility badge
