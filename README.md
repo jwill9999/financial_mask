@@ -1,12 +1,12 @@
 # Angular Secure Credit Card Input
 
 <<<<<<< HEAD
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jwill9999/financial_mask)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
 [![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
 =======
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/your-username/your-repo)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/your-username/your-repo)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
 [![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/e2e-tests.yml)
 >>>>>>> b51e6a1da5b41bbbbb07972b2a34cad1d4b8063a
 [![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
