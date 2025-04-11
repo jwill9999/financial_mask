@@ -1,0 +1,143 @@
+name: Accessibility
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# Required permissions for updating the README
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  a11y-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    # Detect if running in Act
+    - name: Check if running in Act
+      id: check-act
+      run: |
+        if [ -n "$GITHUB_ACTIONS" ] && [ "$GITHUB_ACTOR" = "nektos/act" ]; then
+          echo "RUNNING_IN_ACT=true" >> $GITHUB_ENV
+          echo "RUNNING_IN_ACT=true" >> $GITHUB_OUTPUT
+          echo "Running in Act - will skip some steps"
+        else
+          echo "RUNNING_IN_ACT=false" >> $GITHUB_ENV
+          echo "RUNNING_IN_ACT=false" >> $GITHUB_OUTPUT
+          echo "Running in GitHub Actions"
+        fi
+    
+    # Navigate to the correct directory if needed
+    - name: Set working directory
+      id: set-dir
+      run: |
+        if [ -f "angular-app/package.json" ]; then
+          echo "WORK_DIR=angular-app" >> $GITHUB_ENV
+          echo "WORK_DIR=angular-app" >> $GITHUB_OUTPUT
+          echo "Working in angular-app directory"
+        else
+          echo "WORK_DIR=." >> $GITHUB_ENV
+          echo "WORK_DIR=." >> $GITHUB_OUTPUT
+          echo "Working in root directory"
+        fi
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd ${{ env.WORK_DIR }}
+        npm ci
+    
+    # Run accessibility linting
+    - name: Run accessibility checks
+      id: a11y_check
+      continue-on-error: true
+      run: |
+        cd ${{ env.WORK_DIR }}
+        if npm run lint:a11y; then
+          echo "A11Y_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "A11Y_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "A11Y_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "A11Y_COLOR=red" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      continue-on-error: true
+      with:
+        script: |
+          const a11yStatus = '${{ steps.a11y_check.outputs.A11Y_STATUS }}';
+          const a11yColor = '${{ steps.a11y_check.outputs.A11Y_COLOR }}';
+          
+          const a11yBadge = `[![Accessibility](https://img.shields.io/badge/accessibility-${a11yStatus}-${a11yColor})](https://github.com/${{ github.repository }}/actions/workflows/accessibility.yml)`;
+          
+          const status = a11yStatus === 'passing' ? 'Passed ✅' : 'Failed ❌';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Accessibility Check ${status}\n\n${a11yBadge}\n\n${status === 'Failed ❌' ? 'Please fix the accessibility issues in your code.' : 'Accessibility checks have passed successfully.'}`
+          }) 
+    
+    # Update README accessibility badge (run only on main/master branch pushes)
+    - name: Update README accessibility badge
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
+        # Set git identity for the commit
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Change directory if needed
+        cd ${{ env.WORK_DIR }}
+        
+        # Get the accessibility status
+        A11Y_STATUS="${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}"
+        A11Y_COLOR="${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}"
+        
+        # Create the badge URL
+        A11Y_BADGE="[![Accessibility](https://img.shields.io/badge/accessibility-${A11Y_STATUS}-${A11Y_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/accessibility.yml)"
+        
+        # Update the README badge
+        if [ -f "README.md" ]; then
+          # Try to update existing badge first
+          if grep -q "!\[Accessibility\]" README.md; then
+            sed -i -E "s|\\[\\!\\[Accessibility\\]\\([^)]+\\)\\]\\([^)]+\\)|${A11Y_BADGE}|g" README.md
+          else
+            # If no existing badge, add it after the Format badge or other badges
+            if grep -q "!\[Format\]" README.md; then
+              sed -i -E "/\\[\\!\\[Format\\]/ s/$/\n${A11Y_BADGE}/" README.md
+            elif grep -q "!\[Lint\]" README.md; then
+              sed -i -E "/\\[\\!\\[Lint\\]/ s/$/\n${A11Y_BADGE}/" README.md
+            else
+              # Add after any existing badge
+              sed -i -E "/\\[\\!\\[.*\\]/ s/$/\n${A11Y_BADGE}/" README.md
+            fi
+          fi
+          
+          echo "README.md accessibility badge updated"
+          
+          # Check if there are changes to commit
+          if [[ -n $(git status -s README.md) ]]; then
+            echo "Changes detected, committing README.md updates"
+            git add README.md
+            git commit -m "docs: update accessibility badge [skip ci]"
+            git push
+          else
+            echo "No changes to README.md detected"
+          fi
+        else
+          echo "README.md not found in ${{ env.WORK_DIR }}"
+        fi
+      continue-on-error: true 

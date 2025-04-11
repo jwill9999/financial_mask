@@ -1,16 +1,14 @@
 # Angular Secure Credit Card Input
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
-[![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jwill9999/financial_mask)
 [![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
-[![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
-[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/e2e-tests.yml)
 [![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ed)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
 [![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/code-quality.yml)
 [![Format](https://img.shields.io/badge/format-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/code-quality.yml)
+[![Accessibility](https://img.shields.io/badge/accessibility-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/accessibility.yml) 
 
 This project demonstrates secure credit card handling in Angular 19, featuring masked display, copy protection, and PCI DSS compliance.
 
