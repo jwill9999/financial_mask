@@ -42,7 +42,17 @@ module.exports = function (config) {
       }
     },
     reporters: ['progress', 'kjhtml', 'coverage'],
-    browsers: ['Chrome'],
-    restartOnFileChange: true
+  
+    // Detect if running in CI environment (GitHub Actions, etc.)
+    browsers: process.env.CI ? ['ChromeHeadless'] : ['Chrome'],
+    restartOnFileChange: true,
+    
+    // Customize Chrome flags for both normal and headless modes
+    customLaunchers: {
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+      }
+    }
   });
-}; 
+  }; 
