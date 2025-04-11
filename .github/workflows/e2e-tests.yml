@@ -1,0 +1,60 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Cypress run
+      uses: cypress-io/github-action@v5
+      with:
+        build: npm run build
+        start: npm start
+        wait-on: 'http://localhost:4200'
+        browser: chrome
+        headless: true
+    
+    - name: Upload Cypress screenshots
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: cypress/screenshots
+    
+    - name: Upload Cypress videos
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: cypress-videos
+        path: cypress/videos
+    
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && success()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const badge = '[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/e2e-tests.yml)';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## E2E Tests Passed ✅\n\n${badge}\n\nAll end-to-end tests are passing.`
+          }) 

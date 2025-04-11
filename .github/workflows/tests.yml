@@ -1,4 +1,4 @@
-name: Angular Tests
+name: Unit Tests
 
 on:
   push:
@@ -49,8 +49,8 @@ jobs:
         elif (( $(echo "$STATEMENTS >= 60" | bc -l) )); then COLOR="yellow"; 
         else COLOR="red"; fi
         
-        echo "::set-output name=statements::$STATEMENTS"
-        echo "::set-output name=color::$COLOR"
+        echo "STATEMENTS=$STATEMENTS" >> $GITHUB_OUTPUT
+        echo "COLOR=$COLOR" >> $GITHUB_OUTPUT
       id: coverage
     
     - name: Comment on PR with badges
@@ -58,8 +58,8 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const statements = steps.coverage.outputs.statements;
-          const color = steps.coverage.outputs.color;
+          const statements = '${{ steps.coverage.outputs.STATEMENTS }}';
+          const color = '${{ steps.coverage.outputs.COLOR }}';
           
           const testBadge = `[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/${context.repo.owner}/${context.repo.repo}/actions)`;
           const coverageBadge = `[![Coverage](https://img.shields.io/badge/coverage-${statements}%25-${color})](https://codecov.io/gh/${context.repo.owner}/${context.repo.repo})`;
