@@ -106,9 +106,16 @@ jobs:
           echo "describe('Smoke Test', () => {" > cypress/e2e/smoke.spec.js
           echo "  it('should load the home page', () => {" >> cypress/e2e/smoke.spec.js
           echo "    cy.visit('/');" >> cypress/e2e/smoke.spec.js
-          echo "    cy.contains('angular-app');" >> cypress/e2e/smoke.spec.js
+          echo "    // Look for form fields that we know exist in the app" >> cypress/e2e/smoke.spec.js
+          echo "    cy.get('form').should('exist');" >> cypress/e2e/smoke.spec.js
+          echo "    cy.get('input[formControlName=\"fullName\"]').should('exist');" >> cypress/e2e/smoke.spec.js
+          echo "    cy.get('input[formControlName=\"creditCard\"]').should('exist');" >> cypress/e2e/smoke.spec.js
           echo "  });" >> cypress/e2e/smoke.spec.js
           echo "});" >> cypress/e2e/smoke.spec.js
+        else
+          echo "Updating existing smoke test with more reliable selectors"
+          # Just update the existing file with better assertions
+          sed -i 's/cy.contains(.angular-app.)/cy.get("form").should("exist")/g' cypress/e2e/smoke.spec.js
         fi
         
         # Also set an environment variable for Cypress to use port 4200
@@ -168,16 +175,22 @@ jobs:
     - name: Upload Cypress screenshots
       if: failure() && env.RUNNING_IN_ACT != 'true'
       uses: actions/upload-artifact@v4
+      continue-on-error: true
       with:
         name: cypress-screenshots
-        path: ${{ env.WORK_DIR }}/cypress/screenshots
+        path: |
+          ${{ env.WORK_DIR == '.' && './cypress/screenshots' || '${{ env.WORK_DIR }}/cypress/screenshots' }}
+          cypress/screenshots
     
     - name: Upload Cypress videos
       if: always() && env.RUNNING_IN_ACT != 'true'
       uses: actions/upload-artifact@v4
+      continue-on-error: true
       with:
         name: cypress-videos
-        path: ${{ env.WORK_DIR }}/cypress/videos
+        path: |
+          ${{ env.WORK_DIR == '.' && './cypress/videos' || '${{ env.WORK_DIR }}/cypress/videos' }}
+          cypress/videos
     
     - name: Comment on PR
       if: github.event_name == 'pull_request'
