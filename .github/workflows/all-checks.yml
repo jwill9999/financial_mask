@@ -69,50 +69,48 @@ jobs:
         cache: 'npm'
         cache-dependency-path: '${{ env.WORK_DIR }}/package-lock.json'
     
-    # Handle Cypress configuration - fix for duplicate config files
-    - name: Configure Cypress
+    # Force a clean Cypress configuration setup
+    - name: Force Cypress Configuration
       run: |
         cd ${{ env.WORK_DIR }}
         
-        # Check for existing config files
-        CONFIG_TS="cypress.config.ts"
-        CONFIG_JS="cypress.config.js"
+        echo "Removing all existing Cypress config files to avoid conflicts"
+        rm -f cypress.config.js cypress.config.ts cypress.json
         
-        # If both exist, delete the JS version to avoid conflicts
-        if [ -f "$CONFIG_TS" ] && [ -f "$CONFIG_JS" ]; then
-          echo "Found both $CONFIG_TS and $CONFIG_JS - removing $CONFIG_JS to avoid conflicts"
-          rm "$CONFIG_JS"
+        echo "Creating a fresh Cypress config with explicit port 4200"
+        cat > cypress.config.js << 'EOF'
+        const { defineConfig } = require('cypress');
+
+        module.exports = defineConfig({
+          e2e: {
+            baseUrl: 'http://localhost:4200',
+            supportFile: false,
+            specPattern: 'cypress/e2e/**/*.{js,jsx,ts,tsx}',
+          },
+        });
+        EOF
+        
+        echo "Contents of new Cypress config:"
+        cat cypress.config.js
+        
+        # Create an empty cypress directory structure if it doesn't exist
+        mkdir -p cypress/e2e
+        
+        # Create a simple test if none exist
+        if [ ! -f cypress/e2e/smoke.spec.js ]; then
+          echo "Creating a basic smoke test"
+          cat > cypress/e2e/smoke.spec.js << 'EOF'
+          describe('Smoke Test', () => {
+            it('should load the home page', () => {
+              cy.visit('/');
+              cy.contains('angular-app');
+            });
+          });
+          EOF
         fi
         
-        # Update the TypeScript config if it exists
-        if [ -f "$CONFIG_TS" ]; then
-          echo "Updating existing $CONFIG_TS with correct baseUrl"
-          # More complex sed for TypeScript that handles different ways baseUrl might be defined
-          sed -i -E 's|(baseUrl:)[^,]*|baseUrl: "http://localhost:4200"|g' "$CONFIG_TS"
-          echo "Updated $CONFIG_TS to use baseUrl: http://localhost:4200"
-          cat "$CONFIG_TS"
-        # Or update the JS config if it exists
-        elif [ -f "$CONFIG_JS" ]; then
-          echo "Updating existing $CONFIG_JS with correct baseUrl"
-          sed -i -E 's|(baseUrl:)[^,]*|baseUrl: "http://localhost:4200"|g' "$CONFIG_JS"
-          echo "Updated $CONFIG_JS to use baseUrl: http://localhost:4200"
-          cat "$CONFIG_JS"
-        # Create a simple JS config if neither exists
-        else
-          echo "Creating new simplified $CONFIG_JS with baseUrl: http://localhost:4200"
-          echo "const { defineConfig } = require('cypress');" > "$CONFIG_JS"
-          echo "module.exports = defineConfig({" >> "$CONFIG_JS"
-          echo "  e2e: {" >> "$CONFIG_JS"
-          echo "    baseUrl: 'http://localhost:4200'," >> "$CONFIG_JS"
-          echo "    setupNodeEvents(on, config) {}," >> "$CONFIG_JS"
-          echo "  }," >> "$CONFIG_JS"
-          echo "});" >> "$CONFIG_JS"
-          cat "$CONFIG_JS"
-        fi
-        
-        # Debug - list all config files after changes
-        echo "Listing Cypress config files after changes:"
-        ls -la cypress.config.*
+        # Also set an environment variable for Cypress to use port 4200
+        echo "CYPRESS_BASE_URL=http://localhost:4200" >> $GITHUB_ENV
     
     # Install dependencies in the correct directory
     - name: Install dependencies
@@ -214,6 +212,8 @@ jobs:
       if: env.RUNNING_IN_ACT != 'true'
       continue-on-error: true
       uses: cypress-io/github-action@v5
+      env:
+        CYPRESS_BASE_URL: http://localhost:4200
       with:
         working-directory: ${{ env.WORK_DIR }}
         start: npm start
@@ -222,6 +222,7 @@ jobs:
         headed: false
         install: false
         publish-summary: true
+        config: baseUrl=http://localhost:4200
     
     # Cypress artifact uploads
     - name: Upload Cypress screenshots
