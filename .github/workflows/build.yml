@@ -58,9 +58,17 @@ jobs:
         npm ci
     
     - name: Build
+      id: build_step
+      continue-on-error: true
       run: |
         cd ${{ env.WORK_DIR }}
-        npm run build
+        if npm run build; then
+          echo "BUILD_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "BUILD_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "BUILD_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "BUILD_COLOR=red" >> $GITHUB_OUTPUT
+        fi
     
     # Skip artifact upload when running in Act
     - name: Upload build artifacts
@@ -104,7 +112,7 @@ jobs:
     
     # Update README build badge (run only on main/master branch pushes)
     - name: Update README build badge
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && success()
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       run: |
         # Set git identity for the commit
         git config --global user.name "GitHub Actions"
@@ -113,9 +121,13 @@ jobs:
         # Change directory if needed
         cd ${{ env.WORK_DIR }}
         
+        # Get build status
+        BUILD_STATUS="${{ steps.build_step.outputs.BUILD_STATUS || 'unknown' }}"
+        BUILD_COLOR="${{ steps.build_step.outputs.BUILD_COLOR || 'lightgrey' }}"
+        
         # Create the badge URL - look for both Build and CI badges
-        BUILD_BADGE="[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/build.yml)"
-        CI_BADGE="[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/build.yml)"
+        BUILD_BADGE="[![Build](https://img.shields.io/badge/build-${BUILD_STATUS}-${BUILD_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/build.yml)"
+        CI_BADGE="[![CI](https://img.shields.io/badge/CI-${BUILD_STATUS}-${BUILD_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/build.yml)"
         
         # Update the README badge - check for both possible badge names
         if [ -f "README.md" ]; then

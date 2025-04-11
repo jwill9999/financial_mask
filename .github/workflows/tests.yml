@@ -101,6 +101,21 @@ jobs:
           fi
         fi
     
+    # Run tests only if not in Act
+    - name: Run tests
+      id: run_tests
+      if: env.RUNNING_IN_ACT != 'true'
+      continue-on-error: true
+      run: |
+        cd ${{ env.WORK_DIR }}
+        if npm run test:coverage; then
+          echo "TESTS_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "TESTS_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "TESTS_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "TESTS_COLOR=red" >> $GITHUB_OUTPUT
+        fi
+    
     # For Act: fake a successful test run
     - name: Mock test run for Act
       if: env.RUNNING_IN_ACT == 'true'
@@ -109,13 +124,9 @@ jobs:
         mkdir -p coverage/angular-app
         echo '{"total":{"statements":{"total":100,"covered":97,"skipped":0,"pct":97},"branches":{"total":16,"covered":15,"skipped":0,"pct":93.75},"functions":{"total":13,"covered":13,"skipped":0,"pct":100},"lines":{"total":64,"covered":63,"skipped":0,"pct":98.43}}}' > coverage/angular-app/coverage-summary.json
         echo "Mock test coverage generated for Act"
-    
-    # Run tests only if not in Act
-    - name: Run tests
-      if: env.RUNNING_IN_ACT != 'true'
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npm run test:coverage
+        echo "TESTS_STATUS=passing" >> $GITHUB_OUTPUT
+        echo "TESTS_COLOR=brightgreen" >> $GITHUB_OUTPUT
+      id: mock_tests
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -187,8 +198,12 @@ jobs:
         elif (( $(echo "$STATEMENTS >= 60" | bc -l) )); then COLOR="yellow"; 
         else COLOR="red"; fi
         
+        # Get the test status (from run_tests or mock_tests)
+        TESTS_STATUS="${{ steps.run_tests.outputs.TESTS_STATUS || steps.mock_tests.outputs.TESTS_STATUS || 'unknown' }}"
+        TESTS_COLOR="${{ steps.run_tests.outputs.TESTS_COLOR || steps.mock_tests.outputs.TESTS_COLOR || 'lightgrey' }}"
+        
         # Create the badge URLs
-        TEST_BADGE="[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/tests.yml)"
+        TEST_BADGE="[![Tests](https://img.shields.io/badge/tests-${TESTS_STATUS}-${TESTS_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/tests.yml)"
         COVERAGE_BADGE="[![Coverage](https://img.shields.io/badge/coverage-${STATEMENTS}%25-${COLOR})](https://codecov.io/gh/${{ github.repository }})"
         
         # Update the README badges
@@ -213,8 +228,8 @@ jobs:
         else
           echo "README.md not found in ${{ env.WORK_DIR }}"
         fi
-      continue-on-error: true 
-
+      continue-on-error: true
+    
     - name: Run ESLint
       id: eslint
       continue-on-error: true

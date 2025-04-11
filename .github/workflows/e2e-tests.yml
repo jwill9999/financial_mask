@@ -149,10 +149,15 @@ jobs:
         echo "Mock video file" > cypress/videos/mock.mp4
         
         echo "Mocked Cypress test artifacts created for Act"
+        echo "E2E_STATUS=passing" >> $GITHUB_OUTPUT
+        echo "E2E_COLOR=brightgreen" >> $GITHUB_OUTPUT
+      id: mock_e2e
     
     # Run Cypress only if not in Act
     - name: Cypress run
+      id: cypress_run
       if: env.RUNNING_IN_ACT != 'true'
+      continue-on-error: true
       uses: cypress-io/github-action@v5
       env:
         CYPRESS_BASE_URL: http://localhost:4200
@@ -165,6 +170,19 @@ jobs:
         headed: false
         publish-summary: true
         config: baseUrl=http://localhost:4200
+    
+    # Check Cypress results and set status
+    - name: Set E2E status
+      id: e2e_status
+      if: env.RUNNING_IN_ACT != 'true'
+      run: |
+        if [ "${{ steps.cypress_run.outcome }}" == "success" ]; then
+          echo "E2E_STATUS=passing" >> $GITHUB_OUTPUT
+          echo "E2E_COLOR=brightgreen" >> $GITHUB_OUTPUT
+        else
+          echo "E2E_STATUS=failing" >> $GITHUB_OUTPUT
+          echo "E2E_COLOR=red" >> $GITHUB_OUTPUT
+        fi
     
     # Use simplified artifact upload for Act
     - name: Upload artifacts in Act
@@ -222,8 +240,12 @@ jobs:
         # Change directory if needed
         cd ${{ env.WORK_DIR }}
         
+        # Get the E2E status (from e2e_status or mock_e2e)
+        E2E_STATUS="${{ steps.e2e_status.outputs.E2E_STATUS || steps.mock_e2e.outputs.E2E_STATUS || 'unknown' }}"
+        E2E_COLOR="${{ steps.e2e_status.outputs.E2E_COLOR || steps.mock_e2e.outputs.E2E_COLOR || 'lightgrey' }}"
+        
         # Create the badge URL
-        E2E_BADGE="[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/${{ github.repository }}/actions/workflows/e2e-tests.yml)"
+        E2E_BADGE="[![E2E Tests](https://img.shields.io/badge/e2e-${E2E_STATUS}-${E2E_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/e2e-tests.yml)"
         
         # Update the README badge
         if [ -f "README.md" ]; then
