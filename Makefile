@@ -1,6 +1,6 @@
 # Angular Project Makefile
 
-.PHONY: help start build test coverage open-coverage lint lint-fix clean docker-dev docker-prod docker-build docker-run docker-stop docker-clean prettier prettier-check e2e e2e-open e2e-run kill-server test-ci e2e-ci format-check
+.PHONY: help start build test coverage lint lint-fix clean docker-dev docker-prod docker-build docker-run docker-stop docker-clean prettier prettier-check e2e e2e-open e2e-run kill-server test-ci e2e-ci format-check
 
 # Default target
 help:
@@ -12,9 +12,7 @@ help:
 	@echo "  make test          - Run tests in watch mode"
 	@echo "  make test-once     - Run tests once"
 	@echo "  make test-ci       - Run tests in CI mode (headless)"
-	@echo "  make coverage      - Generate code coverage report"
-	@echo "  make open-coverage - Open code coverage report in browser"
-	@echo "  make full-coverage - Run tests with coverage and open report"
+	@echo "  make coverage      - Run tests with coverage"
 	@echo "  make lint          - Run linter"
 	@echo "  make lint-fix      - Run linter and fix issues automatically"
 	@echo "  make prettier      - Format code with Prettier"
@@ -59,17 +57,9 @@ test-once:
 test-ci:
 	npm run test:ci
 
-# Generate coverage report
+# Run tests with coverage
 coverage:
 	npm run test:coverage
-
-# Open coverage report
-open-coverage:
-	npm run coverage:report
-
-# Run tests with coverage and open the report
-full-coverage:
-	./run-coverage.sh
 
 # Run linter
 lint:

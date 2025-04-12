@@ -10,20 +10,6 @@
 [![Format](https://img.shields.io/badge/format-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
 [![Accessibility](https://img.shields.io/badge/accessibility-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml) 
 
-## Test Coverage
-
-The current coverage exceeds these thresholds with:
-- Statements: 97.1% (67/69)
-- Branches: 93.75% (15/16)
-- Functions: 100% (13/13)
-- Lines: 98.43% (63/64)
-
-The project enforces the following minimum coverage thresholds:
-- Statements: 80%
-- Branches: 85%
-- Functions: 85%
-- Lines: 80%
-
 This project demonstrates secure credit card handling in Angular 19, featuring masked display, copy protection, and PCI DSS compliance.
 
 ## Getting Started
@@ -118,8 +104,7 @@ angular-app/
 ├── Dockerfile              # Docker configuration for production
 ├── nginx.conf              # Nginx configuration for Docker deployment
 ├── docker-compose.yml      # Docker Compose configuration
-├── Makefile                # Helpful commands
-└── run-coverage.sh         # Script to run tests and view coverage
+└── Makefile                # Helpful commands
 ```
 
 ## Using Makefile Commands
@@ -142,8 +127,8 @@ make build
 # Run tests in watch mode
 make test
 
-# Generate code coverage and open report
-make full-coverage
+# Run tests with coverage
+make coverage
 
 # Run linter
 make lint
@@ -245,43 +230,6 @@ make test
 make test-once
 ```
 
-## Setting up TypeScript Testing
-
-If you're seeing errors in test files like `Property 'toBeTruthy' does not exist on type 'Assertion'`, follow these steps:
-
-1. Install required testing types:
-   ```bash
-   npm install --save-dev @types/jasmine
-   ```
-
-2. Update your `tsconfig.spec.json` file:
-   ```json
-   {
-     "extends": "./tsconfig.json",
-     "compilerOptions": {
-       "outDir": "./out-tsc/spec",
-       "types": [
-         "jasmine",
-         "node"
-       ]
-     },
-     "files": [
-       "src/test.ts",
-       "src/polyfills.ts"
-     ],
-     "include": [
-       "src/**/*.spec.ts",
-       "src/**/*.d.ts"
-     ]
-   }
-   ```
-
-3. Make sure your test setup file includes:
-   ```typescript
-   // src/test.ts
-   import 'jasmine-core/lib/jasmine-core';
-   ```
-
 ## Running E2E tests
 
 End-to-end tests simulate real user behavior by testing the application from the user's perspective. This project uses [Cypress](https://www.cypress.io/) for E2E testing.
@@ -328,22 +276,6 @@ npm run coverage:report
 # or
 make open-coverage
 ```
-
-To run tests with coverage and automatically open the report (if tests pass):
-
-```bash
-./run-coverage.sh
-# or
-make full-coverage
-```
-
-This will open the HTML report in your default browser, showing detailed coverage information for each file.
-
-### Coverage Report Location
-
-The coverage report is generated in:
-- HTML format: `coverage/angular-app/index.html`
-- LCOV format: `coverage/angular-app/lcov.info` (for CI/CD integrations)
 
 ## Docker Deployment
 
