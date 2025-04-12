@@ -18,7 +18,7 @@
     "lint:a11y": "eslint --ext .ts,.html src/ --config eslint.config.js",
     "prepare": "husky && husky install",
     "e2e": "ng e2e",
-    "e2e:ci": "ng e2e --configuration=production --headless --browser=chrome",
+    "e2e:ci": "ng e2e --configuration=production --headless --browser=chrome --watch=false",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run"
   },
