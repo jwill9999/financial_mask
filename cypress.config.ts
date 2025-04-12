@@ -13,14 +13,6 @@ export default defineConfig({
     retries: {
       runMode: 2,
       openMode: 0
-    },
-    setupNodeEvents(on) {
-      on('after:run', (results) => {
-        if (results && 'totalFailed' in results) {
-          // Force process exit after tests complete
-          process.exit(results.totalFailed === 0 ? 0 : 1);
-        }
-      });
     }
   },
   component: {
