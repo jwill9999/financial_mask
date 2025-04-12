@@ -18,7 +18,7 @@
     "lint:a11y": "eslint --ext .ts,.html src/ --config eslint.config.js",
     "prepare": "husky && husky install",
     "e2e": "ng e2e",
-    "e2e:ci": "ng build --configuration production && cypress run --browser chrome --headless --config baseUrl=http://localhost:4201",
+    "e2e:ci": "ng build --configuration production && ng serve --configuration production --port 4201 & sleep 10 && cypress run --browser chrome --headless --config baseUrl=http://localhost:4201",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run"
   },

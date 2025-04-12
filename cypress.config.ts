@@ -13,6 +13,11 @@ export default defineConfig({
     retries: {
       runMode: 2,
       openMode: 0
+    },
+    setupNodeEvents(on, config) {
+      // Increase the timeout for server startup
+      config.defaultCommandTimeout = 30000;
+      return config;
     }
   },
   component: {

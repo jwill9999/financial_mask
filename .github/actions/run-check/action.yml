@@ -1,23 +1,25 @@
 name: 'Run Check'
-description: 'Run a check and set status output'
+description: 'Run a check and set status output based on command result'
 inputs:
-  name:
-    description: 'Name of the check'
+  check-name:
+    description: 'Name of the check to run'
     required: true
   command:
-    description: 'Command to run'
+    description: 'Command to run for the check'
     required: true
   continue-on-error:
     description: 'Whether to continue on error'
     required: false
     default: 'false'
+
 outputs:
   status:
-    description: 'Status of the check'
+    description: 'Status of the check (passing/failing)'
     value: ${{ steps.check.outputs.status }}
   color:
     description: 'Color for the status badge'
     value: ${{ steps.check.outputs.color }}
+
 runs:
   using: "composite"
   steps:
@@ -26,15 +28,14 @@ runs:
       run: |
         if [ "${{ inputs.continue-on-error }}" = "true" ]; then
           ${{ inputs.command }} || true
-          if [ $? -eq 0 ]; then
-            echo "status=✅ Passed" >> $GITHUB_OUTPUT
-            echo "color=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=❌ Failed" >> $GITHUB_OUTPUT
-            echo "color=critical" >> $GITHUB_OUTPUT
-          fi
+          echo "status=passing" >> $GITHUB_OUTPUT
+          echo "color=brightgreen" >> $GITHUB_OUTPUT
         else
-          ${{ inputs.command }}
-          echo "status=✅ Passed" >> $GITHUB_OUTPUT
-          echo "color=success" >> $GITHUB_OUTPUT
+          if ${{ inputs.command }}; then
+            echo "status=passing" >> $GITHUB_OUTPUT
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          else
+            echo "status=failing" >> $GITHUB_OUTPUT
+            echo "color=red" >> $GITHUB_OUTPUT
+          fi
         fi 
