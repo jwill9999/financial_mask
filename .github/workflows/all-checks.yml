@@ -69,6 +69,19 @@ jobs:
         node-version: '20.11.1'
         cache: 'npm'
 
+    - name: Debug Nx Setup
+      run: |
+        echo "Checking for Nx files:"
+        ls -la nx*
+        echo "\nChecking for workspace files:"
+        ls -la workspace*
+        echo "\nChecking root directory:"
+        ls -la
+        echo "\nChecking package manager config:"
+        if [ -f "nx.json" ]; then
+          cat nx.json
+        fi
+
     - name: Verify Node and npm versions
       run: |
         echo "Node version: $(node -v)"
@@ -108,10 +121,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        echo "Cleaning npm cache"
-        npm cache clean --force
-        echo "Installing dependencies"
-        npm ci --verbose
+        echo "Installing with npm install for Nx workspace"
+        npm install
+        echo "Verifying Nx installation:"
+        npx nx --version
 
     - name: Nx Cache
       uses: actions/cache@v3
