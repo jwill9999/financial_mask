@@ -24,7 +24,7 @@ runs:
     - id: check
       shell: bash
       run: |
-        if ${{ inputs.continue-on-error == 'true' }}; then
+        if [ "${{ inputs.continue-on-error }}" = "true" ]; then
           ${{ inputs.command }} || true
           if [ $? -eq 0 ]; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT

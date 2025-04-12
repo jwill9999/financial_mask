@@ -1,14 +1,14 @@
 # Angular Secure Credit Card Input
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/tests.yml)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
 [![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
-[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/e2e-tests.yml)
+[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
 [![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ed)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
-[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/code-quality.yml)
-[![Format](https://img.shields.io/badge/format-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/code-quality.yml)
-[![Accessibility](https://img.shields.io/badge/accessibility-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/accessibility.yml) 
+[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Format](https://img.shields.io/badge/format-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Accessibility](https://img.shields.io/badge/accessibility-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml) 
 
 This project demonstrates secure credit card handling in Angular 19, featuring masked display, copy protection, and PCI DSS compliance.
 
@@ -18,7 +18,7 @@ This project demonstrates secure credit card handling in Angular 19, featuring m
 
 Before you begin, ensure you have the following installed:
 
-- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Node.js](https://nodejs.org/) (v20 or higher)
 - [npm](https://www.npmjs.com/) (usually comes with Node.js)
 - A modern web browser (Chrome, Firefox, Edge, etc.)
 
@@ -582,3 +582,27 @@ If you encounter Docker-related issues:
 - [Nginx Documentation](https://nginx.org/en/docs/)
 - [Jasmine Testing Framework](https://jasmine.github.io/)
 - [Cypress E2E Testing](https://www.cypress.io/guides)
+
+### Available Scripts
+
+The project includes several npm scripts and Makefile targets for common tasks:
+
+#### Development
+- `npm start` or `make start` - Start development server
+- `npm run build` or `make build` - Build production version
+- `npm run build -- --configuration development` or `make build-dev` - Build development version
+
+#### Testing
+- `npm test` or `make test` - Run tests in watch mode
+- `npm run test:ci` or `make test-ci` - Run tests in CI mode (headless)
+- `npm run test:coverage` or `make coverage` - Generate code coverage report
+- `npm run e2e` or `make e2e` - Run E2E tests
+- `npm run e2e:ci` or `make e2e-ci` - Run E2E tests in CI mode
+
+#### Code Quality
+- `npm run lint` or `make lint` - Run linter
+- `npm run lint:fix` or `make lint-fix` - Run linter and fix issues
+- `npm run prettier` or `make prettier` - Format code with Prettier
+- `npm run prettier:check` or `make prettier-check` - Check code formatting
+- `npm run format:check` or `make format-check` - Check code formatting (alias)
+- `npm run lint:a11y` - Run accessibility checks

@@ -1,6 +1,6 @@
 # Angular Project Makefile
 
-.PHONY: help start build test coverage open-coverage lint lint-fix clean docker-dev docker-prod docker-build docker-run docker-stop docker-clean prettier prettier-check e2e e2e-open e2e-run kill-server
+.PHONY: help start build test coverage open-coverage lint lint-fix clean docker-dev docker-prod docker-build docker-run docker-stop docker-clean prettier prettier-check e2e e2e-open e2e-run kill-server test-ci e2e-ci format-check
 
 # Default target
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  make build-dev     - Build development version"
 	@echo "  make test          - Run tests in watch mode"
 	@echo "  make test-once     - Run tests once"
+	@echo "  make test-ci       - Run tests in CI mode (headless)"
 	@echo "  make coverage      - Generate code coverage report"
 	@echo "  make open-coverage - Open code coverage report in browser"
 	@echo "  make full-coverage - Run tests with coverage and open report"
@@ -18,9 +19,11 @@ help:
 	@echo "  make lint-fix      - Run linter and fix issues automatically"
 	@echo "  make prettier      - Format code with Prettier"
 	@echo "  make prettier-check - Check code formatting with Prettier"
+	@echo "  make format-check  - Check code formatting (alias for prettier-check)"
 	@echo "  make e2e           - Run Cypress E2E tests (equivalent to ng e2e)"
 	@echo "  make e2e-open      - Open Cypress test runner"
 	@echo "  make e2e-run       - Run Cypress tests headlessly"
+	@echo "  make e2e-ci        - Run E2E tests in CI mode"
 	@echo "  make clean         - Clean build artifacts"
 	@echo ""
 	@echo "Docker commands:"
@@ -52,6 +55,10 @@ test:
 test-once:
 	npm test -- --no-watch
 
+# Run tests in CI mode
+test-ci:
+	npm run test:ci
+
 # Generate coverage report
 coverage:
 	npm run test:coverage
@@ -79,6 +86,10 @@ prettier:
 # Check code formatting with Prettier
 prettier-check:
 	npm run prettier:check
+
+# Check code formatting (alias)
+format-check:
+	npm run format:check
 
 # Clean build artifacts
 clean:
@@ -119,6 +130,9 @@ e2e-open: kill-server
 
 e2e-run: kill-server
 	(npm start -- --port 4201 &) && sleep 10 && CYPRESS_BASE_URL=http://localhost:4201 npm run cypress:run && pkill -f "ng serve" || true
+
+e2e-ci:
+	npm run e2e:ci
 
 # Kill Angular server if running
 kill-server:
