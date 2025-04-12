@@ -1,4 +1,4 @@
-name: "All Checks"
+name: "CI/CD"
 
 on:
   push:
@@ -7,40 +7,140 @@ on:
     branches: [ main ]
 
 jobs:
-  quality-checks:
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+      - name: Extract Node version
+        run: |
+          NODE_VERSION=$(node -v | sed 's/v//')
+          echo "{\"node_version\": \"$NODE_VERSION\"}" > .github/badges/node.json
       - name: Install dependencies
         run: npm ci
-      - name: Run build
+      - name: Build
         run: npm run build
+      - name: Extract Angular version
+        run: |
+          ANGULAR_VERSION=$(node -p "require('./package.json').dependencies['@angular/core'].replace('^', '')")
+          echo "{\"angular_version\": \"$ANGULAR_VERSION\"}" > .github/badges/angular.json
+      - name: Create badges directory
+        run: mkdir -p .github/badges
+      - name: Upload version data
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-data
+          path: .github/badges/*.json
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
       - name: Run tests
-        run: npm run test:ci
-      - name: Run coverage tests
         run: npm run test:coverage
+      - name: Extract coverage data
+        run: |
+          COVERAGE=$(npm run test:coverage | grep -o 'Lines.*[0-9]*\.[0-9]*%' | grep -o '[0-9]*\.[0-9]*')
+          echo "{\"coverage\": $COVERAGE}" > .github/badges/coverage.json
+      - name: Create badges directory
+        run: mkdir -p .github/badges
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: .github/badges/coverage.json
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
       - name: Run E2E tests
-        run: npm run e2e:ci
+        run: npm run e2e:run
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run linter
+        run: npm run lint
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npm run format:check
+
+  a11y:
+    name: Accessibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
       - name: Run accessibility checks
         run: npm run lint:a11y
-      - name: Run code quality checks
-        run: npm run lint && npm run format:check
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Create PR comment
-        if: github.event_name == 'pull_request'
+
+  update-badges:
+    needs: [test, e2e, lint, format, a11y]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-data
+          path: .github/badges
+      - name: Download version data
+        uses: actions/download-artifact@v4
+        with:
+          name: version-data
+          path: .github/badges
+      - name: Commit and push badge data
         run: |
-          echo "## Build Status" > comment.md
-          echo "- Build: ✅ Passed" >> comment.md
-          echo "- Tests: ✅ Passed" >> comment.md
-          echo "- Coverage: ✅ Passed" >> comment.md
-          echo "- E2E: ✅ Passed" >> comment.md
-          echo "- Accessibility: ✅ Passed" >> comment.md
-          echo "- Code Quality: ✅ Passed" >> comment.md
-          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md 
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .github/badges/
+          git commit -m "Update badge data [skip ci]"
+          git push 

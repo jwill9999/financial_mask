@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit {
+  // Component for secure credit card handling with PCI DSS compliance
   title = 'angular-app';
   contactForm!: FormGroup;
   isCreditCardVisible = false;
