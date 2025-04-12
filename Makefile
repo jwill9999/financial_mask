@@ -51,7 +51,7 @@ test:
 
 # Run tests once
 test-once:
-	npm test -- --no-watch
+	npm test -- --no-watch && pkill -f 'Google Chrome' || true
 
 # Run tests in CI mode
 test-ci:
@@ -119,7 +119,7 @@ e2e-open: kill-server
 	(npm start -- --port 4201 &) && sleep 10 && CYPRESS_BASE_URL=http://localhost:4201 npm run cypress:open
 
 e2e-run: kill-server
-	(npm start -- --port 4201 &) && sleep 10 && CYPRESS_BASE_URL=http://localhost:4201 npm run cypress:run && pkill -f "ng serve" || true
+	(npm start -- --port 4201 &) && sleep 10 && CYPRESS_BASE_URL=http://localhost:4201 npm run cypress:run && pkill -f "ng serve" && pkill -f 'Google Chrome' || true
 
 e2e-ci:
 	npm run e2e:ci
