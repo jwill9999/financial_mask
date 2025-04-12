@@ -19,8 +19,6 @@ jobs:
       with:
         fetch-depth: 0
 
-   
-
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
       with:
@@ -39,20 +37,8 @@ jobs:
         node-version: '20.11.1'
         cache: 'npm'
 
-    
-
- 
-
- 
-
-
-
-
-
-
-
     - name: Install dependencies
-      run: npm ci
+      run: npm install --legacy-peer-deps
 
     - name: Build
       run: npx nx build angular-app --configuration=production
@@ -88,16 +74,17 @@ jobs:
     - name: Check formatting
       run: npm run format:check
       
-    - name: Run unit tests
-      run: npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false
+    - name: Run unit tests with coverage
+      run: npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false --code-coverage
       env:
         CHROME_BIN: chrome
 
-    - name: Upload coverage reports to Codecov
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/*/coverage-final.json
+        slug: jwill9999/financial_mask
+        files: ./coverage/angular-app/lcov.info
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
