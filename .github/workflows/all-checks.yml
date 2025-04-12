@@ -30,6 +30,30 @@ jobs:
           check-name: 'Tests'
           command: 'npm run test:ci'
           continue-on-error: true
+      - name: Run coverage tests
+        uses: ./.github/actions/run-check
+        id: coverage
+        with:
+          check-name: 'Coverage'
+          command: 'npm run test:coverage'
+          continue-on-error: true
+      - name: Extract coverage statistics
+        id: coverage-stats
+        run: |
+          # Extract overall coverage percentage
+          COVERAGE=$(grep -oP '(?<=<span class="strong">)[0-9]+(?= %</span>)' coverage/angular-app/index.html | head -n 1)
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          
+          # Extract detailed statistics
+          STATEMENTS=$(grep -oP '(?<=Statements</span>.*<span class="strong">)[0-9.]+(?= %</span>.*<span class="quiet">)[0-9]+/[0-9]+' coverage/angular-app/index.html)
+          BRANCHES=$(grep -oP '(?<=Branches</span>.*<span class="strong">)[0-9.]+(?= %</span>.*<span class="quiet">)[0-9]+/[0-9]+' coverage/angular-app/index.html)
+          FUNCTIONS=$(grep -oP '(?<=Functions</span>.*<span class="strong">)[0-9.]+(?= %</span>.*<span class="quiet">)[0-9]+/[0-9]+' coverage/angular-app/index.html)
+          LINES=$(grep -oP '(?<=Lines</span>.*<span class="strong">)[0-9.]+(?= %</span>.*<span class="quiet">)[0-9]+/[0-9]+' coverage/angular-app/index.html)
+          
+          echo "statements=$STATEMENTS" >> $GITHUB_OUTPUT
+          echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+          echo "functions=$FUNCTIONS" >> $GITHUB_OUTPUT
+          echo "lines=$LINES" >> $GITHUB_OUTPUT
       - name: Run E2E tests
         uses: ./.github/actions/run-check
         id: e2e
@@ -51,17 +75,35 @@ jobs:
           check-name: 'Code Quality'
           command: 'npm run lint && npm run format:check'
           continue-on-error: true
-      - name: Update README badges
+      - name: Update README badges and coverage stats
         uses: ./.github/actions/run-check
         id: update-badges
         with:
           check-name: 'Update Badges'
           command: |
-            sed -i "s/build-.*-brightgreen/build-${{ steps.build.outputs.status }}-${{ steps.build.outputs.color }}/g" README.md
-            sed -i "s/tests-.*-brightgreen/tests-${{ steps.tests.outputs.status }}-${{ steps.tests.outputs.color }}/g" README.md
-            sed -i "s/e2e-.*-brightgreen/e2e-${{ steps.e2e.outputs.status }}-${{ steps.e2e.outputs.color }}/g" README.md
-            sed -i "s/accessibility-.*-brightgreen/accessibility-${{ steps.a11y.outputs.status }}-${{ steps.a11y.outputs.color }}/g" README.md
-            sed -i "s/code-quality-.*-brightgreen/code-quality-${{ steps.code-quality.outputs.status }}-${{ steps.code-quality.outputs.color }}/g" README.md
+            # Update test badge
+            sed -i "s/tests-\${status}-\${color}/tests-${{ steps.tests.outputs.status }}-${{ steps.tests.outputs.color }}/g" README.md
+            
+            # Update coverage badge
+            sed -i "s/coverage-\${coverage}%25-\${color}/coverage-${{ steps.coverage-stats.outputs.coverage }}%25-${{ steps.coverage.outputs.color }}/g" README.md
+            
+            # Update E2E badge
+            sed -i "s/e2e-\${status}-\${color}/e2e-${{ steps.e2e.outputs.status }}-${{ steps.e2e.outputs.color }}/g" README.md
+            
+            # Update lint badge
+            sed -i "s/lint-\${status}-\${color}/lint-${{ steps.code-quality.outputs.status }}-${{ steps.code-quality.outputs.color }}/g" README.md
+            
+            # Update format badge
+            sed -i "s/format-\${status}-\${color}/format-${{ steps.code-quality.outputs.status }}-${{ steps.code-quality.outputs.color }}/g" README.md
+            
+            # Update accessibility badge
+            sed -i "s/accessibility-\${status}-\${color}/accessibility-${{ steps.a11y.outputs.status }}-${{ steps.a11y.outputs.color }}/g" README.md
+            
+            # Update detailed coverage statistics
+            sed -i "s/Statements: [0-9.]+% \([0-9]+/[0-9]+\)/Statements: ${{ steps.coverage-stats.outputs.statements }}/g" README.md
+            sed -i "s/Branches: [0-9.]+% \([0-9]+/[0-9]+\)/Branches: ${{ steps.coverage-stats.outputs.branches }}/g" README.md
+            sed -i "s/Functions: [0-9.]+% \([0-9]+/[0-9]+\)/Functions: ${{ steps.coverage-stats.outputs.functions }}/g" README.md
+            sed -i "s/Lines: [0-9.]+% \([0-9]+/[0-9]+\)/Lines: ${{ steps.coverage-stats.outputs.lines }}/g" README.md
       - name: Create PR comment
         if: github.event_name == 'pull_request'
         uses: ./.github/actions/run-check
@@ -72,7 +114,14 @@ jobs:
             echo "## Build Status" > comment.md
             echo "- Build: ${{ steps.build.outputs.status }}" >> comment.md
             echo "- Tests: ${{ steps.tests.outputs.status }}" >> comment.md
+            echo "- Coverage: ${{ steps.coverage-stats.outputs.coverage }}%" >> comment.md
             echo "- E2E: ${{ steps.e2e.outputs.status }}" >> comment.md
             echo "- Accessibility: ${{ steps.a11y.outputs.status }}" >> comment.md
             echo "- Code Quality: ${{ steps.code-quality.outputs.status }}" >> comment.md
+            echo "" >> comment.md
+            echo "### Coverage Details" >> comment.md
+            echo "- Statements: ${{ steps.coverage-stats.outputs.statements }}" >> comment.md
+            echo "- Branches: ${{ steps.coverage-stats.outputs.branches }}" >> comment.md
+            echo "- Functions: ${{ steps.coverage-stats.outputs.functions }}" >> comment.md
+            echo "- Lines: ${{ steps.coverage-stats.outputs.lines }}" >> comment.md
             gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md 

@@ -1,14 +1,29 @@
 # Angular Secure Credit Card Input
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Coverage](https://img.shields.io/badge/coverage-%25-red)](https://codecov.io/gh/jwill9999/financial_mask)
-[![E2E Tests](https://img.shields.io/badge/e2e-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Tests](https://img.shields.io/badge/tests-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Coverage](https://img.shields.io/badge/coverage-${coverage}%25-${color})](https://codecov.io/gh/jwill9999/financial_mask)
+[![E2E Tests](https://img.shields.io/badge/e2e-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
 [![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ed)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
-[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Format](https://img.shields.io/badge/format-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Accessibility](https://img.shields.io/badge/accessibility-passing-brightgreen)](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml) 
+[![Lint](https://img.shields.io/badge/lint-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Format](https://img.shields.io/badge/format-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
+[![Accessibility](https://img.shields.io/badge/accessibility-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml) 
+
+## Test Coverage
+
+The current coverage exceeds these thresholds with:
+
+Statements: 97.1% (67/69)
+Branches: 93.75% (15/16)
+Functions: 100% (13/13)
+Lines: 98.43% (63/64)
+
+The project enforces the following minimum coverage thresholds:
+- Statements: 80%
+- Branches: 85%
+- Functions: 85%
+- Lines: 80%
 
 This project demonstrates secure credit card handling in Angular 19, featuring masked display, copy protection, and PCI DSS compliance.
 
@@ -296,20 +311,6 @@ E2E tests cover critical user journeys:
 ## Code Coverage
 
 Code coverage reports measure how much of your code is being tested by your unit tests. This project has been set up with comprehensive test coverage for the secure credit card handling functionality.
-
-### Coverage Thresholds
-
-The project enforces the following minimum coverage thresholds:
-- Statements: 80%
-- Branches: 85%
-- Functions: 85%
-- Lines: 80%
-
-The current coverage exceeds these thresholds with:
-- Statements: 97.1% (67/69)
-- Branches: 93.75% (15/16)
-- Functions: 100% (13/13)
-- Lines: 98.43% (63/64)
 
 ### Running Tests with Coverage
 
