@@ -1,0 +1,40 @@
+name: 'Run Check'
+description: 'Run a check and set status output'
+inputs:
+  name:
+    description: 'Name of the check'
+    required: true
+  command:
+    description: 'Command to run'
+    required: true
+  continue-on-error:
+    description: 'Whether to continue on error'
+    required: false
+    default: 'false'
+outputs:
+  status:
+    description: 'Status of the check'
+    value: ${{ steps.check.outputs.status }}
+  color:
+    description: 'Color for the status badge'
+    value: ${{ steps.check.outputs.color }}
+runs:
+  using: "composite"
+  steps:
+    - id: check
+      shell: bash
+      run: |
+        if ${{ inputs.continue-on-error == 'true' }}; then
+          ${{ inputs.command }} || true
+          if [ $? -eq 0 ]; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+            echo "color=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            echo "color=critical" >> $GITHUB_OUTPUT
+          fi
+        else
+          ${{ inputs.command }}
+          echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          echo "color=success" >> $GITHUB_OUTPUT
+        fi 

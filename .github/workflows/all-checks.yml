@@ -1,391 +1,78 @@
-name: All Checks
+name: "All Checks"
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      CI: true
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    # Detect if running in Act
-    - name: Check if running in Act
-      id: check-act
-      run: |
-        if [ -n "$GITHUB_ACTIONS" ] && [ "$GITHUB_ACTOR" = "nektos/act" ]; then
-          echo "RUNNING_IN_ACT=true" >> $GITHUB_ENV
-          echo "RUNNING_IN_ACT=true" >> $GITHUB_OUTPUT
-          echo "Running in Act - will skip some steps"
-        else
-          echo "RUNNING_IN_ACT=false" >> $GITHUB_ENV
-          echo "RUNNING_IN_ACT=false" >> $GITHUB_OUTPUT
-          echo "Running in GitHub Actions"
-        fi
-    
-    # Debug workspace
-    - name: Debug workspace
-      run: |
-        pwd
-        ls -la
-        echo "Finding package.json files:"
-        find . -name "package.json" | sort
-        echo "Finding package-lock.json files:"
-        find . -name "package-lock.json" | sort
-    
-    # Navigate to the correct directory if needed
-    - name: Set working directory
-      id: set-dir
-      run: |
-        if [ -f "angular-app/package.json" ]; then
-          echo "WORK_DIR=angular-app" >> $GITHUB_ENV
-          echo "WORK_DIR=angular-app" >> $GITHUB_OUTPUT
-          echo "Working in angular-app directory"
-        else
-          echo "WORK_DIR=." >> $GITHUB_ENV
-          echo "WORK_DIR=." >> $GITHUB_OUTPUT
-          echo "Working in root directory"
-        fi
-    
-    # Set up Node.js without cache for Act
-    - name: Set up Node.js for Act
-      if: env.RUNNING_IN_ACT == 'true'
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-    
-    # Set up Node.js with cache for real GitHub Actions
-    - name: Set up Node.js for GitHub
-      if: env.RUNNING_IN_ACT != 'true'
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        cache: 'npm'
-        cache-dependency-path: '${{ env.WORK_DIR }}/package-lock.json'
-    
-    # Force a clean Cypress configuration setup
-    - name: Force Cypress Configuration
-      run: |
-        cd ${{ env.WORK_DIR }}
-        
-        echo "Removing all existing Cypress config files to avoid conflicts"
-        rm -f cypress.config.js cypress.config.ts cypress.json
-        
-        echo "Creating a fresh Cypress config with explicit port 4200"
-        echo "const { defineConfig } = require('cypress');" > cypress.config.js
-        echo "" >> cypress.config.js
-        echo "module.exports = defineConfig({" >> cypress.config.js
-        echo "  e2e: {" >> cypress.config.js
-        echo "    baseUrl: 'http://localhost:4200'," >> cypress.config.js
-        echo "    supportFile: false," >> cypress.config.js
-        echo "    specPattern: 'cypress/e2e/**/*.{js,jsx,ts,tsx}'," >> cypress.config.js
-        echo "  }," >> cypress.config.js
-        echo "});" >> cypress.config.js
-        
-        echo "Contents of new Cypress config:"
-        cat cypress.config.js
-        
-        # Create an empty cypress directory structure if it doesn't exist
-        mkdir -p cypress/e2e
-        
-        # Create a simple test if none exist
-        if [ ! -f cypress/e2e/smoke.spec.js ]; then
-          echo "Creating a basic smoke test"
-          echo "describe('Smoke Test', () => {" > cypress/e2e/smoke.spec.js
-          echo "  it('should load the home page', () => {" >> cypress/e2e/smoke.spec.js
-          echo "    cy.visit('/');" >> cypress/e2e/smoke.spec.js
-          echo "    // Look for form fields that we know exist in the app" >> cypress/e2e/smoke.spec.js
-          echo "    cy.get('form').should('exist');" >> cypress/e2e/smoke.spec.js
-          echo "    cy.get('input[formControlName=\"fullName\"]').should('exist');" >> cypress/e2e/smoke.spec.js
-          echo "    cy.get('input[formControlName=\"creditCard\"]').should('exist');" >> cypress/e2e/smoke.spec.js
-          echo "  });" >> cypress/e2e/smoke.spec.js
-          echo "});" >> cypress/e2e/smoke.spec.js
-        else
-          echo "Updating existing smoke test with more reliable selectors"
-          # Just update the existing file with better assertions
-          sed -i 's/cy.contains(.angular-app.)/cy.get("form").should("exist")/g' cypress/e2e/smoke.spec.js
-        fi
-        
-        # Also set an environment variable for Cypress to use port 4200
-        echo "CYPRESS_BASE_URL=http://localhost:4200" >> $GITHUB_ENV
-    
-    # Install dependencies in the correct directory
-    - name: Install dependencies
-      run: |
-        cd ${{ env.WORK_DIR }}
-        echo "Installing dependencies in $(pwd)"
-        npm ci
-    
-    # Install Chrome for tests
-    - name: Install Chrome
-      if: env.RUNNING_IN_ACT != 'true'
-      run: |
-        if [ -f /etc/os-release ]; then
-          # For Linux environments
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          echo "Chrome installation completed"
-          echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
-          echo "Chrome found at: $(which google-chrome)"
-        else
-          # For macOS
-          echo "Using local Chrome installation"
-          if [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
-            echo "CHROME_BIN=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" >> $GITHUB_ENV
-          fi
-        fi
-    
-    # Skip problematic steps for Act
-    - name: Act compatibility notice
-      if: env.RUNNING_IN_ACT == 'true'
-      run: |
-        echo "Running in Act - skipping Chrome installation, linting and test execution"
-        echo "These steps would be run on the real GitHub Actions but are skipped locally"
-        
-        # Mock needed outputs for later steps
-        mkdir -p ${{ env.WORK_DIR }}/coverage/angular-app
-        echo '{"total":{"statements":{"total":100,"covered":97,"skipped":0,"pct":97},"branches":{"total":16,"covered":15,"skipped":0,"pct":93.75},"functions":{"total":13,"covered":13,"skipped":0,"pct":100},"lines":{"total":64,"covered":63,"skipped":0,"pct":98.43}}}' > ${{ env.WORK_DIR }}/coverage/angular-app/coverage-summary.json
-    
-    # Code Quality - only run if not in Act
-    - name: Check formatting with Prettier
-      if: env.RUNNING_IN_ACT != 'true'
-      continue-on-error: true
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npx prettier --check "src/**/*.{ts,html,css,scss}" || true
-    
-    - name: Run ESLint
-      if: env.RUNNING_IN_ACT != 'true'
-      continue-on-error: true
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npx ng lint || true
-    
-    # Accessibility checks - only run if not in Act
-    - name: Run accessibility checks
-      id: a11y_check
-      if: env.RUNNING_IN_ACT != 'true'
-      continue-on-error: true
-      run: |
-        cd ${{ env.WORK_DIR }}
-        if npm run lint:a11y; then
-          echo "A11Y_STATUS=passing" >> $GITHUB_OUTPUT
-          echo "A11Y_COLOR=brightgreen" >> $GITHUB_OUTPUT
-        else
-          echo "A11Y_STATUS=failing" >> $GITHUB_OUTPUT
-          echo "A11Y_COLOR=red" >> $GITHUB_OUTPUT
-        fi
-    
-    # Build - run in all environments
-    - name: Build
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npm run build || true
-    
-    # Build artifact upload for GitHub Actions
-    - name: Upload build artifacts
-      if: env.RUNNING_IN_ACT != 'true'
-      uses: actions/upload-artifact@v4
-      continue-on-error: true
-      with:
-        name: build-artifacts
-        path: ${{ env.WORK_DIR }}/dist/
-        retention-days: 7
-    
-    # Unit Tests - only run if not in Act
-    - name: Run unit tests
-      if: env.RUNNING_IN_ACT != 'true'
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npm run test:coverage || true
-    
-    - name: Upload coverage to Codecov
-      if: env.RUNNING_IN_ACT != 'true'
-      continue-on-error: true
-      uses: codecov/codecov-action@v3
-      with:
-        directory: ${{ env.WORK_DIR }}/coverage/angular-app/
-        fail_ci_if_error: false
-    
-    # E2E Tests - skip in Act
-    - name: Mock Cypress for Act
-      if: env.RUNNING_IN_ACT == 'true'
-      run: |
-        cd ${{ env.WORK_DIR }}
-        echo "Mocking Cypress tests for Act"
-        mkdir -p cypress/screenshots
-        mkdir -p cypress/videos
-        echo "Mock screenshot" > cypress/screenshots/mock.png
-        echo "Mock video file" > cypress/videos/mock.mp4
-    
-    # E2E Tests - only run in GitHub
-    - name: Cypress run
-      if: env.RUNNING_IN_ACT != 'true'
-      continue-on-error: true
-      uses: cypress-io/github-action@v5
-      env:
-        CYPRESS_BASE_URL: http://localhost:4200
-      with:
-        working-directory: ${{ env.WORK_DIR }}
-        start: npm start
-        wait-on: 'http://localhost:4200'
-        browser: chrome
-        headed: false
-        install: false
-        publish-summary: true
-        config: baseUrl=http://localhost:4200
-    
-    # Cypress artifact uploads
-    - name: Upload Cypress screenshots
-      if: env.RUNNING_IN_ACT != 'true' && failure()
-      continue-on-error: true
-      uses: actions/upload-artifact@v4
-      with:
-        name: cypress-screenshots
-        path: |
-          ${{ env.WORK_DIR == '.' && './cypress/screenshots' || '${{ env.WORK_DIR }}/cypress/screenshots' }}
-          cypress/screenshots
-    
-    - name: Upload Cypress videos
-      if: env.RUNNING_IN_ACT != 'true' && always()
-      continue-on-error: true
-      uses: actions/upload-artifact@v4
-      with:
-        name: cypress-videos
-        path: |
-          ${{ env.WORK_DIR == '.' && './cypress/videos' || '${{ env.WORK_DIR }}/cypress/videos' }}
-          cypress/videos
-    
-    # Generate badges from coverage data
-    - name: Generate coverage badges
-      if: env.RUNNING_IN_ACT != 'true'
-      run: |
-        cd ${{ env.WORK_DIR }}
-        npm install --no-save badge-maker
-        echo "Generating badges..."
-        
-        # Extract coverage from report
-        STATEMENTS=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.statements.pct')
-        BRANCHES=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.branches.pct')
-        FUNCTIONS=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.functions.pct')
-        LINES=$(cat ./coverage/angular-app/coverage-summary.json | jq '.total.lines.pct')
-        
-        # Determine badge color based on coverage
-        if (( $(echo "$STATEMENTS >= 90" | bc -l) )); then COLOR="brightgreen"; 
-        elif (( $(echo "$STATEMENTS >= 80" | bc -l) )); then COLOR="green"; 
-        elif (( $(echo "$STATEMENTS >= 70" | bc -l) )); then COLOR="yellowgreen"; 
-        elif (( $(echo "$STATEMENTS >= 60" | bc -l) )); then COLOR="yellow"; 
-        else COLOR="red"; fi
-        
-        echo "STATEMENTS=$STATEMENTS" >> $GITHUB_OUTPUT
-        echo "COLOR=$COLOR" >> $GITHUB_OUTPUT
-      id: coverage
-      continue-on-error: true
-    
-    # Final report
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      continue-on-error: true
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const a11yStatus = '${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}';
-          const a11yColor = '${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}';
-          const coverage = '${{ steps.coverage.outputs.STATEMENTS || '0' }}';
-          const covColor = '${{ steps.coverage.outputs.COLOR || 'red' }}';
-          
-          const allChecksBadge = '[![All Checks](https://img.shields.io/badge/all%20checks-completed-blue)](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)';
-          const a11yBadge = `[![Accessibility](https://img.shields.io/badge/accessibility-${a11yStatus}-${a11yColor})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)`;
-          const coverageBadge = `[![Coverage](https://img.shields.io/badge/coverage-${coverage}%25-${covColor})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)`;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `## All Checks Ran\n\n${allChecksBadge} ${a11yBadge} ${coverageBadge}\n\nThe workflow has completed with all necessary checks.`
-          })
-    
-    # Update README badges (run only on main/master branch pushes)
-    - name: Update README badges for accessibility
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      run: |
-        # Set git identity for the commit
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        
-        # Change directory if needed
-        cd ${{ env.WORK_DIR }}
-        
-        # Get the accessibility status
-        A11Y_STATUS="${{ steps.a11y_check.outputs.A11Y_STATUS || 'unknown' }}"
-        A11Y_COLOR="${{ steps.a11y_check.outputs.A11Y_COLOR || 'lightgrey' }}"
-        
-        # Get the coverage data
-        STATEMENTS="${{ steps.coverage.outputs.STATEMENTS || '0' }}"
-        COV_COLOR="${{ steps.coverage.outputs.COLOR || 'red' }}"
-        
-        # Create the badge URLs
-        A11Y_BADGE="[![Accessibility](https://img.shields.io/badge/accessibility-${A11Y_STATUS}-${A11Y_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
-        COVERAGE_BADGE="[![Coverage](https://img.shields.io/badge/coverage-${STATEMENTS}%25-${COV_COLOR})](https://github.com/${{ github.repository }}/actions/workflows/all-checks.yml)"
-        
-        # Update the README badges
-        if [ -f "README.md" ]; then
-          # Update Accessibility badge
-          sed -i -E "s|\\[\\!\\[Accessibility\\]\\([^)]+\\)\\]\\([^)]+\\)|${A11Y_BADGE}|g" README.md
-          
-          # Update Coverage badge
-          sed -i -E "s|\\[\\!\\[Coverage\\]\\([^)]+\\)\\]\\([^)]+\\)|${COVERAGE_BADGE}|g" README.md
-          
-          # If badges don't exist yet, add them
-          # First check for accessibility badge
-          if ! grep -q "\\[\\!\\[Accessibility\\]" README.md; then
-            # Add after any existing badges or at top
-            if grep -q "\\[\\!\\[" README.md; then
-              # Insert after last badge
-              sed -i -e "/\\[\\!\\[.*\\].*\\].*)/a\\${A11Y_BADGE}" README.md
-            else
-              # Insert at the top
-              sed -i -e "1i\\${A11Y_BADGE}\\n" README.md
-            fi
-          fi
-          
-          # Then check for coverage badge
-          if ! grep -q "\\[\\!\\[Coverage\\]" README.md; then
-            # Add after any existing badges
-            if grep -q "\\[\\!\\[Accessibility\\]" README.md; then
-              # Insert after accessibility badge
-              sed -i -e "/\\[\\!\\[Accessibility\\].*\\].*\\].*)/a\\${COVERAGE_BADGE}" README.md
-            elif grep -q "\\[\\!\\[" README.md; then
-              # Insert after last badge
-              sed -i -e "/\\[\\!\\[.*\\].*\\].*)/a\\${COVERAGE_BADGE}" README.md
-            else
-              # Insert at the top
-              sed -i -e "1i\\${COVERAGE_BADGE}\\n" README.md
-            fi
-          fi
-          
-          echo "README.md badges updated"
-          
-          # Check if there are changes to commit
-          if [[ -n $(git status -s README.md) ]]; then
-            echo "Changes detected, committing README.md updates"
-            git add README.md
-            git commit -m "docs: update README badges [skip ci]"
-            git push
-          else
-            echo "No changes to README.md detected"
-          fi
-        else
-          echo "README.md not found in ${{ env.WORK_DIR }}"
-        fi
-      continue-on-error: true 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run build
+        uses: ./.github/actions/run-check
+        id: build
+        with:
+          name: 'Build'
+          command: 'npm run build'
+      - name: Run tests
+        uses: ./.github/actions/run-check
+        id: tests
+        with:
+          name: 'Tests'
+          command: 'npm run test:ci'
+          continue-on-error: true
+      - name: Run E2E tests
+        uses: ./.github/actions/run-check
+        id: e2e
+        with:
+          name: 'E2E Tests'
+          command: 'npm run e2e:ci'
+          continue-on-error: true
+      - name: Run accessibility checks
+        uses: ./.github/actions/run-check
+        id: a11y
+        with:
+          name: 'Accessibility'
+          command: 'npm run lint:a11y'
+          continue-on-error: true
+      - name: Run code quality checks
+        uses: ./.github/actions/run-check
+        id: code-quality
+        with:
+          name: 'Code Quality'
+          command: 'npm run lint && npm run format:check'
+          continue-on-error: true
+      - name: Update README badges
+        uses: ./.github/actions/run-check
+        id: update-badges
+        with:
+          name: 'Update Badges'
+          command: |
+            sed -i "s/build-.*-brightgreen/build-${{ steps.build.outputs.status }}-${{ steps.build.outputs.color }}/g" README.md
+            sed -i "s/tests-.*-brightgreen/tests-${{ steps.tests.outputs.status }}-${{ steps.tests.outputs.color }}/g" README.md
+            sed -i "s/e2e-.*-brightgreen/e2e-${{ steps.e2e.outputs.status }}-${{ steps.e2e.outputs.color }}/g" README.md
+            sed -i "s/accessibility-.*-brightgreen/accessibility-${{ steps.a11y.outputs.status }}-${{ steps.a11y.outputs.color }}/g" README.md
+            sed -i "s/code-quality-.*-brightgreen/code-quality-${{ steps.code-quality.outputs.status }}-${{ steps.code-quality.outputs.color }}/g" README.md
+      - name: Create PR comment
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/run-check
+        id: pr-comment
+        with:
+          name: 'PR Comment'
+          command: |
+            echo "## Build Status" > comment.md
+            echo "- Build: ${{ steps.build.outputs.status }}" >> comment.md
+            echo "- Tests: ${{ steps.tests.outputs.status }}" >> comment.md
+            echo "- E2E: ${{ steps.e2e.outputs.status }}" >> comment.md
+            echo "- Accessibility: ${{ steps.a11y.outputs.status }}" >> comment.md
+            echo "- Code Quality: ${{ steps.code-quality.outputs.status }}" >> comment.md
+            gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md 
