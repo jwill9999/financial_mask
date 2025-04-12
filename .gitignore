@@ -44,3 +44,8 @@ Thumbs.db
 # Docker
 .docker
 docker-compose.override.yml
+
+
+
+.nx/cache
+.nx/workspace-data

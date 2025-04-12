@@ -1,4 +1,4 @@
-name: "CI/CD"
+name: All Checks
 
 on:
   push:
@@ -7,140 +7,139 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    name: Build
+  all-checks:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Extract Node version
-        run: |
-          NODE_VERSION=$(node -v | sed 's/v//')
-          echo "{\"node_version\": \"$NODE_VERSION\"}" > .github/badges/node.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Extract Angular version
-        run: |
-          ANGULAR_VERSION=$(node -p "require('./package.json').dependencies['@angular/core'].replace('^', '')")
-          echo "{\"angular_version\": \"$ANGULAR_VERSION\"}" > .github/badges/angular.json
-      - name: Create badges directory
-        run: mkdir -p .github/badges
-      - name: Upload version data
-        uses: actions/upload-artifact@v4
-        with:
-          name: version-data
-          path: .github/badges/*.json
+    
+    # Add timeout to prevent hanging jobs
+    timeout-minutes: 15
 
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run tests and extract coverage
-        run: |
-          OUTPUT=$(npm run test:coverage)
-          echo "$OUTPUT"
-          COVERAGE=$(echo "$OUTPUT" | grep -o 'Statements.*[0-9]*\.[0-9]*%' | grep -o '[0-9]*\.[0-9]*')
-          echo "{\"coverage\": $COVERAGE}" > .github/badges/coverage.json
-      - name: Create badges directory
-        run: mkdir -p .github/badges
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-data
-          path: .github/badges/coverage.json
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run E2E tests
-        run: npm run e2e:run
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
+      # Retry chrome installation if it fails
+      continue-on-error: true
+      id: chrome-install
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run linter
-        run: npm run lint
+    - name: Retry Chrome Install
+      if: steps.chrome-install.outcome == 'failure'
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
 
-  format:
-    name: Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Check formatting
-        run: npm run format:check
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-  a11y:
-    name: Accessibility
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run accessibility checks
-        run: npm run lint:a11y
+    - name: Install dependencies
+      run: npm ci
+      # Retry npm install if it fails
+      id: npm-install
+      continue-on-error: true
 
-  update-badges:
-    needs: [test, e2e, lint, format, a11y]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download coverage data
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-data
-          path: .github/badges
-      - name: Download version data
-        uses: actions/download-artifact@v4
-        with:
-          name: version-data
-          path: .github/badges
-      - name: Commit and push badge data
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .github/badges/
-          git commit -m "Update badge data [skip ci]"
-          git push 
+    - name: Retry Install Dependencies
+      if: steps.npm-install.outcome == 'failure'
+      run: |
+        rm -rf node_modules
+        npm clean-cache --force
+        npm ci
+      
+    - name: Nx Cache
+      uses: actions/cache@v3
+      with:
+        path: .nx/cache
+        key: ${{ runner.os }}-nx-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nx-
+
+    - name: Build
+      run: npx nx build angular-app --configuration=production
+      # Capture build errors in artifacts
+      continue-on-error: true
+      id: build
+
+    - name: Upload Build Logs
+      if: steps.build.outcome == 'failure'
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs
+        path: |
+          dist
+          .nx/cache/logs
+        
+    - name: Lint
+      run: npx nx lint angular-app
+      
+    - name: Accessibility checks
+      run: npm run lint:a11y
+      # Upload a11y report even if check fails
+      id: a11y
+      continue-on-error: true
+
+    - name: Upload A11y Report
+      if: always() && steps.a11y.outcome == 'failure'
+      uses: actions/upload-artifact@v3
+      with:
+        name: accessibility-report
+        path: .eslintrc.json
+      
+    - name: Check formatting
+      run: npm run format:check
+      
+    - name: Run unit tests
+      run: npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false
+      env:
+        CHROME_BIN: chrome
+      # Upload test results even if tests fail
+      id: unit-tests
+      continue-on-error: true
+
+    - name: Upload Test Coverage
+      if: always()  # Upload even if tests fail
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage
+
+    - name: Run e2e tests
+      run: npx nx e2e angular-app --configuration=production --browser=chrome --headless
+      env:
+        CHROME_BIN: chrome
+      id: e2e-tests
+      continue-on-error: true
+
+    - name: Upload E2E Artifacts
+      if: failure()  # Only upload if E2E tests fail
+      uses: actions/upload-artifact@v3
+      with:
+        name: cypress-artifacts
+        path: |
+          cypress/videos
+          cypress/screenshots
+
+    - name: Upload Build Artifacts
+      if: failure()  # Only upload if build fails
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-output
+        path: dist
+
+    # Final status check
+    - name: Check for failures
+      if: always()
+      run: |
+        if [ "${{ steps.build.outcome }}" == "failure" ] || \
+           [ "${{ steps.a11y.outcome }}" == "failure" ] || \
+           [ "${{ steps.unit-tests.outcome }}" == "failure" ] || \
+           [ "${{ steps.e2e-tests.outcome }}" == "failure" ]; then
+          echo "One or more checks failed"
+          exit 1
+        fi

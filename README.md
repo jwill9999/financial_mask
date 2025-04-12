@@ -1,17 +1,5 @@
 # Angular Secure Credit Card Input
 
-[![Build](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=build&job=build)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=tests&job=test)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Coverage](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/jwill9999/pan/main/.github/badges/coverage.json&label=coverage&query=$.coverage&suffix=%&color=brightgreen)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![E2E Tests](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=e2e&job=e2e)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Lint](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=lint&job=lint)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Format](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=format&job=format)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Accessibility](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?branch=main&label=a11y&job=a11y)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
-[![Angular](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/jwill9999/pan/main/.github/badges/angular.json&label=Angular&query=$.angular_version&color=dd0031&logo=angular)](https://angular.io/)
-[![Node.js](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/jwill9999/pan/main/.github/badges/node.json&label=Node.js&query=$.node_version&color=339933&logo=node.js)](https://nodejs.org/)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ed?logo=docker)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
-
 This project demonstrates secure credit card handling in Angular, featuring masked display, copy protection, and PCI DSS compliance.
 
 ## Getting Started
@@ -20,7 +8,7 @@ This project demonstrates secure credit card handling in Angular, featuring mask
 
 Before you begin, ensure you have the following installed:
 
-- [Node.js](https://nodejs.org/) (version shown in badge above)
+- [Node.js](https://nodejs.org/)
 - [npm](https://www.npmjs.com/) (usually comes with Node.js)
 - A modern web browser (Chrome, Firefox, Edge, etc.)
 
