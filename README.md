@@ -13,11 +13,10 @@
 ## Test Coverage
 
 The current coverage exceeds these thresholds with:
-
-Statements: 97.1% (67/69)
-Branches: 93.75% (15/16)
-Functions: 100% (13/13)
-Lines: 98.43% (63/64)
+- Statements: 97.1% (67/69)
+- Branches: 93.75% (15/16)
+- Functions: 100% (13/13)
+- Lines: 98.43% (63/64)
 
 The project enforces the following minimum coverage thresholds:
 - Statements: 80%
