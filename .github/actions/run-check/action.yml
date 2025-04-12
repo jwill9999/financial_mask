@@ -27,7 +27,7 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.continue-on-error }}" = "true" ]; then
-          ${{ inputs.command }} || true
+          ${{ inputs.command }}
           echo "status=passing" >> $GITHUB_OUTPUT
           echo "color=brightgreen" >> $GITHUB_OUTPUT
         else
