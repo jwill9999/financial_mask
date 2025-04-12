@@ -19,6 +19,22 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Debug Repository Structure
+      run: |
+        echo "Current working directory:"
+        pwd
+        echo "\nRepository root contents:"
+        ls -la
+        echo "\nChecking git status:"
+        git status
+        echo "\nChecking .gitignore for package-lock.json:"
+        if [ -f ".gitignore" ]; then
+          echo "Content of .gitignore:"
+          cat .gitignore
+        fi
+        echo "\nSearching for package-lock.json in entire repository:"
+        find . -name "package-lock.json"
+
     - name: Verify package-lock.json
       run: |
         echo "Current working directory: $(pwd)"
