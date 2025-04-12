@@ -19,37 +19,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Debug Repository Structure
-      run: |
-        echo "Current working directory:"
-        pwd
-        echo "\nRepository root contents:"
-        ls -la
-        echo "\nChecking git status:"
-        git status
-        echo "\nChecking .gitignore for package-lock.json:"
-        if [ -f ".gitignore" ]; then
-          echo "Content of .gitignore:"
-          cat .gitignore
-        fi
-        echo "\nSearching for package-lock.json in entire repository:"
-        find . -name "package-lock.json"
-
-    - name: Verify package-lock.json
-      run: |
-        echo "Current working directory: $(pwd)"
-        echo "Contents of current directory:"
-        ls -la
-        echo "\nVerifying package-lock.json:"
-        if [ -f "package-lock.json" ]; then
-          echo "package-lock.json exists"
-          echo "File size: $(stat -f%z package-lock.json)"
-          echo "File permissions: $(ls -l package-lock.json)"
-        else
-          echo "package-lock.json not found in current directory"
-          echo "Searching for package-lock.json in repository:"
-          find . -name "package-lock.json"
-        fi
+   
 
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
@@ -69,70 +39,20 @@ jobs:
         node-version: '20.11.1'
         cache: 'npm'
 
-    - name: Debug Nx Setup
-      run: |
-        echo "Checking for Nx files:"
-        ls -la nx*
-        echo "\nChecking for workspace files:"
-        ls -la workspace*
-        echo "\nChecking root directory:"
-        ls -la
-        echo "\nChecking package manager config:"
-        if [ -f "nx.json" ]; then
-          cat nx.json
-        fi
+    
 
-    - name: Verify Node and npm versions
-      run: |
-        echo "Node version: $(node -v)"
-        echo "NPM version: $(npm -v)"
-        echo "Current directory: $(pwd)"
-        echo "Directory contents:"
-        ls -la
+ 
 
-    - name: Clean npm cache and node_modules
-      run: |
-        rm -rf node_modules
-        rm -rf package-lock.json
-        npm cache clean --force
+ 
 
-    - name: Debug npm and node versions
-      run: |
-        node --version
-        npm --version
-        echo "Node location: $(which node)"
-        echo "NPM location: $(which npm)"
 
-    - name: Debug package files
-      run: |
-        echo "Package.json content:"
-        cat package.json
-        echo "Package-lock.json exists:"
-        ls -la package-lock.json
 
-    - name: Generate package-lock.json
-      run: |
-        echo "Removing any existing package-lock.json"
-        rm -f package-lock.json
-        echo "Generating new package-lock.json"
-        npm install --package-lock-only
-        echo "Verifying package-lock.json was created:"
-        ls -la package-lock.json
+
+
+
 
     - name: Install dependencies
-      run: |
-        echo "Installing with npm install for Nx workspace"
-        npm install
-        echo "Verifying Nx installation:"
-        npx nx --version
-
-    - name: Nx Cache
-      uses: actions/cache@v3
-      with:
-        path: .nx/cache
-        key: ${{ runner.os }}-nx-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-nx-
+      run: npm ci
 
     - name: Build
       run: npx nx build angular-app --configuration=production
@@ -168,10 +88,10 @@ jobs:
     - name: Check formatting
       run: npm run format:check
       
-    - name: Run unit tests with coverage
-      run: xvfb-run --auto-servernum npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false --code-coverage
+    - name: Run unit tests
+      run: npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false
       env:
-        CHROME_BIN: /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome
+        CHROME_BIN: chrome
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -206,14 +126,4 @@ jobs:
         name: build-output
         path: dist
 
-    # Final status check
-    - name: Check for failures
-      if: always()
-      run: |
-        if [ "${{ steps.build.outcome }}" == "failure" ] || \
-           [ "${{ steps.a11y.outcome }}" == "failure" ] || \
-           [ "${{ steps.unit-tests.outcome }}" == "failure" ] || \
-           [ "${{ steps.e2e-tests.outcome }}" == "failure" ]; then
-          echo "One or more checks failed"
-          exit 1
-        fi
+
