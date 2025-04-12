@@ -9,7 +9,6 @@
     "test": "ng test",
     "test:ci": "ng test --no-watch --browsers ChromeHeadless",
     "test:coverage": "ng test --no-watch --code-coverage && sleep 2 && pkill -f 'karma-chrome-launcher' || true",
-    "coverage:report": "open coverage/angular-app/index.html",
     "prettier": "prettier --write \"src/**/*.{ts,html,css,scss}\"",
     "prettier:check": "prettier --check \"src/**/*.{ts,html,css,scss}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,css,scss}\"",

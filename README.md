@@ -1,14 +1,14 @@
 # Angular Secure Credit Card Input
 
-[![Tests](https://img.shields.io/badge/tests-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Coverage](https://img.shields.io/badge/coverage-${coverage}%25-${color})](https://codecov.io/gh/jwill9999/financial_mask)
-[![E2E Tests](https://img.shields.io/badge/e2e-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Angular](https://img.shields.io/badge/Angular-19-dd0031)](https://angular.io/)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ed)](https://www.docker.com/)
+[![Tests](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?label=tests&logo=github)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/jwill9999/pan?logo=codecov)](https://codecov.io/gh/jwill9999/pan)
+[![E2E Tests](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?label=e2e&logo=cypress)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
+[![Angular](https://img.shields.io/badge/Angular-19-dd0031?logo=angular)](https://angular.io/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ed?logo=docker)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
-[![Lint](https://img.shields.io/badge/lint-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Format](https://img.shields.io/badge/format-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml)
-[![Accessibility](https://img.shields.io/badge/accessibility-${status}-${color})](https://github.com/jwill9999/financial_mask/actions/workflows/all-checks.yml) 
+[![Lint](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?label=lint&logo=eslint)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
+[![Format](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?label=format&logo=prettier)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
+[![Accessibility](https://img.shields.io/github/actions/workflow/status/jwill9999/pan/all-checks.yml?label=a11y&logo=axe)](https://github.com/jwill9999/pan/actions/workflows/all-checks.yml)
 
 This project demonstrates secure credit card handling in Angular 19, featuring masked display, copy protection, and PCI DSS compliance.
 
@@ -267,14 +267,6 @@ To run tests and generate a coverage report, use:
 npm run test:coverage
 # or
 make coverage
-```
-
-To view the detailed HTML coverage report, run:
-
-```bash
-npm run coverage:report
-# or
-make open-coverage
 ```
 
 ## Docker Deployment
