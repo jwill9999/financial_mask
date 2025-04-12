@@ -39,3 +39,13 @@ runs:
             echo "color=red" >> $GITHUB_OUTPUT
           fi
         fi 
+
+on:
+  push:
+    branches: 
+      - main
+      - 'main'
+  pull_request:
+    branches: 
+      - main
+      - 'main' 

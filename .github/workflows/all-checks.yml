@@ -68,7 +68,7 @@ jobs:
 
     - name: Upload Build Logs
       if: steps.build.outcome == 'failure'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-logs
         path: |
@@ -86,7 +86,7 @@ jobs:
 
     - name: Upload A11y Report
       if: always() && steps.a11y.outcome == 'failure'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: accessibility-report
         path: .eslintrc.json
@@ -104,7 +104,7 @@ jobs:
 
     - name: Upload Test Coverage
       if: always()  # Upload even if tests fail
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage
@@ -118,7 +118,7 @@ jobs:
 
     - name: Upload E2E Artifacts
       if: failure()  # Only upload if E2E tests fail
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cypress-artifacts
         path: |
@@ -127,7 +127,7 @@ jobs:
 
     - name: Upload Build Artifacts
       if: failure()  # Only upload if build fails
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-output
         path: dist
