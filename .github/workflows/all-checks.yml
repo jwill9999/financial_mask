@@ -39,17 +39,15 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
-      # Retry npm install if it fails
-      id: npm-install
-      continue-on-error: true
-
-    - name: Retry Install Dependencies
-      if: steps.npm-install.outcome == 'failure'
+    - name: Clean npm cache and node_modules
       run: |
         rm -rf node_modules
-        npm clean-cache --force
+        rm -rf package-lock.json
+        npm cache clean --force
+
+    - name: Install dependencies
+      run: |
+        npm install
         npm ci
       
     - name: Nx Cache
