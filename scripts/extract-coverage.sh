@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Extract overall coverage percentage from coverage report
-COVERAGE=$(grep -oP 'All files[^|]*\|\s*\K\d+\.\d+' coverage/angular-app/index.html | head -n 1)
+# Extract overall coverage percentage from coverage report using awk
+COVERAGE=$(awk '/All files/ {print $4}' coverage/angular-app/index.html | head -n 1)
 
 # Determine color based on coverage percentage
 if (( $(echo "$COVERAGE >= 80" | bc -l) )); then

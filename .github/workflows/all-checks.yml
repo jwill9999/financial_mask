@@ -100,10 +100,10 @@ jobs:
             sed -i "s/accessibility-\${status}-\${color}/accessibility-${{ steps.a11y.outputs.status }}-${{ steps.a11y.outputs.color }}/g" README.md
             
             # Update detailed coverage statistics
-            sed -i "s/Statements: [0-9.]+% \([0-9]+/[0-9]+\)/Statements: ${{ steps.coverage-stats.outputs.statements }}/g" README.md
-            sed -i "s/Branches: [0-9.]+% \([0-9]+/[0-9]+\)/Branches: ${{ steps.coverage-stats.outputs.branches }}/g" README.md
-            sed -i "s/Functions: [0-9.]+% \([0-9]+/[0-9]+\)/Functions: ${{ steps.coverage-stats.outputs.functions }}/g" README.md
-            sed -i "s/Lines: [0-9.]+% \([0-9]+/[0-9]+\)/Lines: ${{ steps.coverage-stats.outputs.lines }}/g" README.md
+            sed -i "s/- Statements: [0-9.]+% \([0-9]+/[0-9]+\)/- Statements: ${{ steps.coverage-stats.outputs.statements }}/g" README.md
+            sed -i "s/- Branches: [0-9.]+% \([0-9]+/[0-9]+\)/- Branches: ${{ steps.coverage-stats.outputs.branches }}/g" README.md
+            sed -i "s/- Functions: [0-9.]+% \([0-9]+/[0-9]+\)/- Functions: ${{ steps.coverage-stats.outputs.functions }}/g" README.md
+            sed -i "s/- Lines: [0-9.]+% \([0-9]+/[0-9]+\)/- Lines: ${{ steps.coverage-stats.outputs.lines }}/g" README.md
       - name: Create PR comment
         if: github.event_name == 'pull_request'
         uses: ./.github/actions/run-check
