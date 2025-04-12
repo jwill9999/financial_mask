@@ -23,15 +23,13 @@ jobs:
       uses: browser-actions/setup-chrome@v1
       with:
         chrome-version: stable
-      # Retry chrome installation if it fails
-      continue-on-error: true
-      id: chrome-install
 
-    - name: Retry Chrome Install
-      if: steps.chrome-install.outcome == 'failure'
-      uses: browser-actions/setup-chrome@v1
-      with:
-        chrome-version: stable
+    - name: Setup Chrome for testing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+        sudo chown root /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+        sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -94,9 +92,9 @@ jobs:
       run: npm run format:check
       
     - name: Run unit tests
-      run: npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false
+      run: xvfb-run --auto-servernum npx nx test angular-app --configuration=ci --browsers=ChromeHeadless --watch=false
       env:
-        CHROME_BIN: chrome
+        CHROME_BIN: /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome
       # Upload test results even if tests fail
       id: unit-tests
       continue-on-error: true
