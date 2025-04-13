@@ -1,0 +1,62 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.11.1'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build
+      run: npm run build:affected
+
+    - name: Lint
+      run: npm run lint:affected
+      
+    - name: Run unit tests with coverage
+      run: npm run test:affected
+      env:
+        CHROME_BIN: chrome
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: jwill9999/financial_mask
+        files: ./coverage/angular-app/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
+      
+    - name: Run e2e tests
+      run: npm run e2e:affected
+      env:
+        CHROME_BIN: chrome
+
+    - name: Upload E2E Artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cypress-artifacts
+        path: |
+          cypress/videos
+          cypress/screenshots

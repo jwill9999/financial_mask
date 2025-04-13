@@ -19,7 +19,15 @@
     "e2e": "nx e2e",
     "e2e:ci": "nx build --configuration production && nx serve --configuration production --port 4201 & sleep 10 && cypress run --browser chrome --headless --config baseUrl=http://localhost:4201 && pkill -f 'ng serve' && sleep 2 && pkill -f 'cypress' || true",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "test:affected": "nx affected --target=test --configuration=ci --browsers=ChromeHeadless --watch=false",
+    "test:all": "nx run-many --target=test --all --configuration=ci --browsers=ChromeHeadless --watch=false",
+    "lint:affected": "nx affected --target=lint",
+    "lint:all": "nx run-many --target=lint --all",
+    "build:affected": "nx affected --target=build --configuration=production",
+    "build:all": "nx run-many --target=build --all --configuration=production",
+    "e2e:affected": "nx affected --target=e2e --configuration=ci --browser=chrome --headless --watch=false",
+    "e2e:all": "nx run-many --target=e2e --all --configuration=ci --browser=chrome --headless --watch=false"
   },
   "private": true,
   "lint-staged": {
