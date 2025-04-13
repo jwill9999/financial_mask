@@ -91,7 +91,7 @@ jobs:
         verbose: true
 
     - name: Run e2e tests
-      run: npx nx e2e angular-app --configuration=production --browser=chrome --headless
+      run: npx nx e2e angular-app --configuration=ci --browser=chrome --headless --ci
       env:
         CHROME_BIN: chrome
       id: e2e-tests
