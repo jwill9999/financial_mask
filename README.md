@@ -2,11 +2,10 @@
 
 This project demonstrates secure credit card handling in Angular, featuring masked display, copy protection, and PCI DSS compliance.
 
-<video width="100%" autoplay loop muted playsinline>
-  <source src="public/pan_video.mp4" type="video/mp4">
-</video>
 
-<br>
+
+
+https://github.com/user-attachments/assets/4d717d55-c342-4a53-b2ea-2750403ce490
 
 
 ## Prerequisites
