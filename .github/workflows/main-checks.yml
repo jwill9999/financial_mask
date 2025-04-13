@@ -25,6 +25,18 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
+
+    - name: Setup Chrome for testing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+        sudo chown root /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+        sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+
     - name: Build
       run: npm run build:all
 
@@ -34,7 +46,7 @@ jobs:
     - name: Run unit tests with coverage
       run: npm run test:all
       env:
-        CHROME_BIN: chrome
+        CHROME_BIN: /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -48,9 +60,14 @@ jobs:
         verbose: true
       
     - name: Run e2e tests
-      run: npm run e2e:all
+      run: |
+        npx nx build angular-app --configuration=production
+        npx nx serve angular-app --configuration=production --port 4201 &
+        sleep 10  # Wait for app to start
+        npx nx affected --target=e2e --configuration=ci --browser=chrome --headless --watch=false --base-url=http://localhost:4201
+        pkill -f "nx serve" || true
       env:
-        CHROME_BIN: chrome
+        CHROME_BIN: /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome
 
     - name: Upload E2E Artifacts
       if: failure()
