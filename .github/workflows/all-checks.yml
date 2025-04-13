@@ -79,7 +79,7 @@ jobs:
       env:
         CHROME_BIN: chrome
 
-    - name: Upload coverage to Codecov
+    - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -91,7 +91,7 @@ jobs:
         verbose: true
 
     - name: Run e2e tests
-      run: npx nx e2e angular-app --configuration=ci --browser=chrome --headless --ci
+      run: npx nx e2e angular-app --configuration=ci --browser=chrome --headless --watch=false
       env:
         CHROME_BIN: chrome
       id: e2e-tests
