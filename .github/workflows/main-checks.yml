@@ -64,7 +64,7 @@ jobs:
         npx nx build angular-app --configuration=production
         npx nx serve angular-app --configuration=production --port 4201 &
         sleep 10  # Wait for app to start
-        npx nx affected --target=e2e --configuration=ci --browser=chrome --headless --watch=false --base-url=http://localhost:4201
+        npx nx affected --target=e2e --configuration=ci --browser=chrome --headless=true --watch=false --base-url=http://localhost:4201
         pkill -f "nx serve" || true
       env:
         CHROME_BIN: /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome
