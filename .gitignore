@@ -5,11 +5,19 @@
 /tmp
 /out-tsc
 /bazel-out
+*.tsbuildinfo
 
 # Node
 /node_modules
 npm-debug.log
 yarn-error.log
+.pnpm-debug.log
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # IDEs and editors
 .idea/
@@ -45,7 +53,34 @@ Thumbs.db
 .docker
 docker-compose.override.yml
 
-
-
+# Nx
 .nx/cache
 .nx/workspace-data
+.nx/installation
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Build and test artifacts
+*.log
+*.pid
+*.seed
+*.pid.lock
+.eslintcache
+.node_repl_history
+.nyc_output
+
+# Package manager
+.npm
+.npmrc
+.pnpm-store/
+
+# Angular specific
+.angular
